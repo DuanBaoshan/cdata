@@ -269,12 +269,12 @@ int List_Clear(List_t list)
 	void* 		p_head = p_list->p_head;
 	void* 		p_next = NULL;
 	
-	LOG_I("Clear dblist:'%s', nodeCount:%d.\n", p_list->name, p_list->nodeCount);
+	LOG_I("Clear dblist:'%s', nodeCount:%ld.\n", p_list->name, p_list->nodeCount);
 	
 	List_Lock(list);
 	while (p_head != NULL)
 	{
-		p_next = List_GetNextNode(p_head);
+		p_next = List_GetNextNode(list, p_head);
 		List_DestroyNode(p_list, p_head);
 		p_head = p_next;
 	}
@@ -306,11 +306,10 @@ int List_Destory(List_t list)
 //=========================================================
 ListNode_t List_InsertData(List_t list, void* p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
-	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
+	int        ret  = ERR_OK;
 	ListNode_t node = NULL;
 	
 	ret = List_CreateNode(list, p_data, &node);
@@ -324,7 +323,7 @@ ListNode_t List_InsertData(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
-		List_DestoryNode(list, node);
+		List_DestroyNode(list, node);
 		return NULL;
 	}	
 	
@@ -333,11 +332,10 @@ ListNode_t List_InsertData(List_t list, void* p_data)
 
 ListNode_t List_InsertData2Head(List_t list, void* p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
 	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
 	ListNode_t node = NULL;
 	
 	ret = List_CreateNode(list, p_data, &node);
@@ -351,7 +349,7 @@ ListNode_t List_InsertData2Head(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
-		List_DestoryNode(list, node);
+		List_DestroyNode(list, node);
 		return NULL;
 	}	
 	
@@ -360,11 +358,10 @@ ListNode_t List_InsertData2Head(List_t list, void* p_data)
 
 ListNode_t List_InsertDataAscently(List_t list, void* p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
 	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
 	ListNode_t node = NULL;
 	
 	ret = List_CreateNode(list, p_data, &node);
@@ -378,7 +375,7 @@ ListNode_t List_InsertDataAscently(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
-		List_DestoryNode(list, node);
+		List_DestroyNode(list, node);
 		return NULL;
 	}	
 	
@@ -387,11 +384,10 @@ ListNode_t List_InsertDataAscently(List_t list, void* p_data)
 
 ListNode_t List_InsertDataDescently(List_t list, void* p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
 	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
 	ListNode_t node = NULL;
 	
 	ret = List_CreateNode(list, p_data, &node);
@@ -405,7 +401,7 @@ ListNode_t List_InsertDataDescently(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
-		List_DestoryNode(list, node);
+		List_DestroyNode(list, node);
 		return NULL;
 	}	
 	
@@ -414,11 +410,10 @@ ListNode_t List_InsertDataDescently(List_t list, void* p_data)
 
 ListNode_t List_InsertDataUniquely(List_t list, void* p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
-	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
+	int        ret  = ERR_OK;
 	ListNode_t node = NULL;
 	
 	ret = List_CreateNode(list, p_data, &node);
@@ -432,7 +427,7 @@ ListNode_t List_InsertDataUniquely(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
-		List_DestoryNode(list, node);
+		List_DestroyNode(list, node);
 		return NULL;
 	}	
 	
@@ -441,11 +436,10 @@ ListNode_t List_InsertDataUniquely(List_t list, void* p_data)
 
 ListNode_t List_InsertData2HeadUniquely(List_t list, void* p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
 	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
 	ListNode_t node = NULL;
 	
 	ret = List_CreateNode(list, p_data, &node);
@@ -459,7 +453,7 @@ ListNode_t List_InsertData2HeadUniquely(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
-		List_DestoryNode(list, node);
+		List_DestroyNode(list, node);
 		return NULL;
 	}	
 	
@@ -468,25 +462,24 @@ ListNode_t List_InsertData2HeadUniquely(List_t list, void* p_data)
 
 ListNode_t List_InsertDataBefore(List_t list, ListNode_t node, void *p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-	CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+	CHECK_PARAM(node != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
-	ListNode_t node = NULL;
+	ListNode_t newNode = NULL;
 	
 	List_Lock(list);
-	node = List_InsertDataBeforeNL(list, p_data);
+	newNode = List_InsertDataBeforeNL(list, node, p_data);
 	List_UnLock(list);
 	
-	return node;
+	return newNode;
 }
 ListNode_t List_InsertDataBeforeNL(List_t list, ListNode_t node, void *p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
-	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
+	int        ret     = ERR_OK;
 	ListNode_t newNode = NULL;
 	
 	ret = List_CreateNode(list, p_data, &newNode);
@@ -509,24 +502,23 @@ ListNode_t List_InsertDataBeforeNL(List_t list, ListNode_t node, void *p_data)
 
 ListNode_t List_InsertDataAfter(List_t list, ListNode_t node, void *p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
-	ListNode_t node = NULL;
+	ListNode_t newNode = NULL;
 	
 	List_Lock(list);
-	node = List_InsertDataAfterNL(list, p_data);
+	newNode = List_InsertDataAfterNL(list, node, p_data);
 	List_UnLock(list);
 	
-	return node;
+	return newNode;
 }
 ListNode_t List_InsertDataAfterNL(List_t list, ListNode_t node, void *p_data)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_data != NULL, NULL);
 	
 	int      ret    = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
 	ListNode_t newNode = NULL;
 	
 	ret = List_CreateNode(list, p_data, &newNode);
@@ -553,7 +545,6 @@ ListNode_t List_InsertDataAtPos(List_t list, void* p_data, CdataIndex_t posIndex
     CHECK_PARAM(p_data != NULL, NULL);
 	
 	int 	   ret     = ERR_OK;
-	List_st*   p_list  = CONVERT_2_LIST(list);
 	ListNode_t node    = NULL;
 	
 	ret = List_CreateNode(list, p_data, &node);
@@ -567,7 +558,7 @@ ListNode_t List_InsertDataAtPos(List_t list, void* p_data, CdataIndex_t posIndex
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
-		List_DestoryNode(list, node);
+		List_DestroyNode(list, node);
 		return NULL;
 	}
 	
@@ -633,7 +624,6 @@ void* List_GetHeadData(List_t list)
 	CHECK_PARAM(list != NULL, NULL);
 	
 	void* p_data = NULL;
-	List_st* p_list = CONVERT_2_LIST(list);
 	
 	List_Lock(list);
 	p_data = List_GetHeadDataNL(list);
@@ -653,7 +643,7 @@ void* List_GetHeadDataNL(List_t list)
 		DBListNode_st* p_node = (DBListNode_st*)p_list->p_head;
 		p_data = p_node->p_data;
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		SGListNode_st* p_node = (SGListNode_st*)p_list->p_head;
 		p_data = p_node->p_data;
@@ -671,7 +661,6 @@ void* List_GetTailData(List_t list)
 	CHECK_PARAM(list != NULL, NULL);
 	
 	void* p_data = NULL;
-	List_st* p_list = CONVERT_2_LIST(list);
 	
 	List_Lock(list);
 	p_data = List_GetTailDataNL(list);
@@ -691,7 +680,7 @@ void* List_GetTailDataNL(List_t list)
 		DBListNode_st* p_node = (DBListNode_st*)p_list->p_tail;
 		p_data = p_node->p_data;
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		SGListNode_st* p_node = (SGListNode_st*)p_list->p_tail;
 		p_data = p_node->p_data;
@@ -764,8 +753,8 @@ int List_GetMachCountByCond(List_t list, void* p_userData, ListCondition_fn cond
 
 void* List_GetData(List_t list, void* p_userData)
 {
-	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);	
-	CHECK_PARAM(p_userData != NULL, ERR_BAD_PARAM);	
+	CHECK_PARAM(list != NULL, NULL);	
+	CHECK_PARAM(p_userData != NULL, NULL);	
 
 	List_st* p_list = CONVERT_2_LIST(list);
 	void *	 	 p_head = NULL;
@@ -792,8 +781,8 @@ void* List_GetData(List_t list, void* p_userData)
 }
 void* List_GetDataByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
 {
-	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);	
-	CHECK_PARAM(conditionFn != NULL, ERR_BAD_PARAM);	
+	CHECK_PARAM(list != NULL, NULL);	
+	CHECK_PARAM(conditionFn != NULL, NULL);	
 
 	List_st* p_list = CONVERT_2_LIST(list);
 	void *	 	 p_head = NULL;
@@ -815,12 +804,12 @@ void* List_GetDataByCond(List_t list, void* p_userData, ListCondition_fn conditi
 
 void* List_GetDataAtPos(List_t list, CdataIndex_t posIndex)
 {
-	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
+	CHECK_PARAM(list != NULL, NULL);
 	
-	List_st* p_list = CONVERT_2_LIST(list);
+	List_st*     p_list = CONVERT_2_LIST(list);
 	void *	 	 p_head = NULL;
 	void *		 p_data = NULL;
-	CdataIndex_t pos = 0;
+	CdataIndex_t pos    = 0;
 	
 	List_Lock(list);
 	for (p_head = p_list->p_head, pos = 0; p_head != NULL; p_head = List_GetNextNodeNL(list, p_head), pos++)
@@ -838,29 +827,53 @@ void* List_GetDataAtPos(List_t list, CdataIndex_t posIndex)
 
 void* List_DetachData(List_t list, void* p_userData)
 {
-	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-	CHECK_PARAM(p_userData != NULL, ERR_BAD_PARAM);
+	CHECK_PARAM(list != NULL, NULL);
+	CHECK_PARAM(p_userData != NULL, NULL);
 	
-	ListNode_t node = NULL;
-	void* p_data    = NULL;
+	int        ret    = ERR_OK;
+	ListNode_t node   = NULL;
+	void*      p_data = NULL;
 	
 	node = List_DetachNodeByData(list, p_userData);
-	p_data = List_DetachNodeData(node);
+	if (node == NULL)
+	{
+		LOG_E("Node is NULL.\n");
+		return NULL;		
+	}
+	p_data = List_DetachNodeData(list, node);
+
 	List_DestroyNode(list, node);
+	ret = List_DestroyNode(list, node);
+	if (ret != ERR_OK)
+	{
+		LOG_E("Fail to destroy node.\n");		
+	}
 	
 	return p_data;
 }
-void* List_DetachDataByCondList_t list, void* p_userData, ListCondition_fn conditionFn)
+void* List_DetachDataByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
 {
-	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-	CHECK_PARAM(conditionFn != NULL, ERR_BAD_PARAM);
+	CHECK_PARAM(list != NULL, NULL);
+	CHECK_PARAM(conditionFn != NULL, NULL);
 	
-	ListNode_t node = NULL;
-	void* p_data    = NULL;
+	int        ret    = ERR_OK;
+	ListNode_t node   = NULL;
+	void*      p_data = NULL;
 	
 	node = List_DetachNodeByCond(list, p_userData, conditionFn);
-	p_data = List_DetachNodeData(node);
+	if (node == NULL)
+	{
+		LOG_E("Node is NULL.\n");
+		return NULL;		
+	}	
+	p_data = List_DetachNodeData(list, node);
+
 	List_DestroyNode(list, node);
+	ret = List_DestroyNode(list, node);
+	if (ret != ERR_OK)
+	{
+		LOG_E("Fail to destroy node.\n");		
+	}
 	
 	return p_data;
 }
@@ -869,12 +882,23 @@ void* List_DetachHeadData(List_t list)
 {
     CHECK_PARAM(list != NULL, NULL);
 	
-	void *	 p_head = NULL;
-	void *	 p_data = NULL;
+	int   ret    = ERR_OK;
+	void* p_head = NULL;
+	void* p_data = NULL;
 	
 	p_head = List_DetachHead(list);
-	p_data = List_DetachNodeData(p_head);
-	List_DestroyNode(list, p_head);
+	if (p_head == NULL)
+	{
+		LOG_E("Fail to detach head node.\n");
+		return NULL;		
+	}
+	p_data = List_DetachNodeData(list, p_head);
+	
+	ret = List_DestroyNode(list, p_head);
+	if (ret != ERR_OK)
+	{
+		LOG_E("Fail to destroy head node.\n");		
+	}	
 	
 	return p_data;
 }
@@ -883,12 +907,23 @@ void* List_DetachTailData(List_t list)
 {
     CHECK_PARAM(list != NULL, NULL);
 	
-	void *	 p_tail = NULL;
-	void *	 p_data = NULL;
+	int    ret    = ERR_OK;
+	void*  p_tail = NULL;
+	void*  p_data = NULL;
 	
 	p_tail = List_DetachTail(list);
-	p_data = List_DetachNodeData(p_tail);
-	List_DestroyNode(list, p_tail);
+	if (p_tail == NULL)
+	{
+		LOG_E("Fail to detach tail node.\n");
+		return NULL;		
+	}
+	p_data = List_DetachNodeData(list, p_tail);
+	
+	ret = List_DestroyNode(list, p_tail);
+	if (ret != ERR_OK)
+	{
+		LOG_E("Fail to destroy tail node.\n");		
+	}
 	
 	return p_data;
 }
@@ -896,14 +931,24 @@ void* List_DetachTailData(List_t list)
 void* List_DetachDataAtPos(List_t list, CdataIndex_t posIndex)
 {
 	CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(conditionFn != NULL, NULL);
 	
+	int ret         = ERR_OK;
 	ListNode_t node = NULL;
 	void* p_data    = NULL;
 	
 	node = List_DetachNodeAtPos(list, posIndex);
-	p_data = List_DetachNodeData(node);
-	List_DestroyNode(list, node);
+	if (node == NULL)
+	{
+		LOG_E("Fail to detach node at pos:%lu.\n", posIndex);
+		return NULL;
+	}
+	p_data = List_DetachNodeData(list, node);
+	
+	ret = List_DestroyNode(list, node);
+	if (ret != ERR_OK)
+	{
+		LOG_E("Fail to destroy node.\n");		
+	}
 	
 	return p_data;
 }
@@ -922,7 +967,7 @@ int List_CreateNode(List_t list, void* p_data, ListNode_t* p_node)
 	{
 		return DBList_CreateNode(list, p_data, p_node);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		return SGList_CreateNode(list, p_data, p_node);
 	}
@@ -947,7 +992,7 @@ int List_DestroyNode(List_t list, ListNode_t node)
 		DBListNode_st *p_node = (DBListNode_st*)node;
 		p_data = p_node->p_data;
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		SGListNode_st *p_node = (SGListNode_st*)node;
 		p_data = p_node->p_data;
@@ -979,7 +1024,7 @@ int List_DestroyNode(List_t list, ListNode_t node)
 int List_InsertNode(List_t list, ListNode_t node)
 {
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
 	
 	int ret = ERR_OK;
 	List_st* p_list = CONVERT_2_LIST(list);
@@ -989,7 +1034,7 @@ int List_InsertNode(List_t list, ListNode_t node)
 	{
 		ret = DBList_InsertNode(list, node);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		ret = SGList_InsertNode(list, node);
 	}	
@@ -1015,7 +1060,7 @@ int List_InsertNode2Head(List_t list, ListNode_t node)
 	{
 		ret = DBList_InsertNode2Head(list, node);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		ret = SGList_InsertNode2Head(list, node);
 	}	
@@ -1041,7 +1086,7 @@ int List_InsertNodeAscently(List_t list, ListNode_t node)
 	{
 		ret = DBList_InsertNodeAscently(list, node);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		ret = SGList_InsertNodeAscently(list, node);
 	}	
@@ -1067,7 +1112,7 @@ int List_InsertNodeDescently(List_t list, ListNode_t node)
 	{
 		ret = DBList_InsertNodeDescently(list, node);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		ret = SGList_InsertNodeDescently(list, node);
 	}	
@@ -1143,7 +1188,6 @@ int List_InsertNodeBefore(List_t list, ListNode_t listNode, ListNode_t newNode)
 	CHECK_PARAM(newNode != NULL, ERR_BAD_PARAM);
 	
 	int ret = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
 	
 	List_Lock(list);
 	ret = List_InsertNodeBeforeNL(list, listNode, newNode);
@@ -1163,7 +1207,7 @@ int List_InsertNodeBeforeNL(List_t list, ListNode_t listNode, ListNode_t newNode
 	{
 		return DBList_InsertNodeBefore(list, listNode, newNode);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		return SGList_InsertNodeBefore(list, listNode, newNode);
 	}	
@@ -1182,7 +1226,6 @@ int List_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode)
 	CHECK_PARAM(newNode != NULL, ERR_BAD_PARAM);
 	
 	int ret = ERR_OK;
-	List_st* p_list = CONVERT_2_LIST(list);
 	
 	List_Lock(list);
 	ret = List_InsertNodeAfterNL(list, listNode, newNode);
@@ -1202,7 +1245,7 @@ int List_InsertNodeAfterNL(List_t list, ListNode_t listNode, ListNode_t newNode)
 	{
 		return DBList_InsertNodeAfter(list, listNode, newNode);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		return SGList_InsertNodeAfter(list, listNode, newNode);
 	}	
@@ -1263,7 +1306,6 @@ int List_InsertNodeAtPos(List_t list, ListNode_t node, CdataIndex_t posIndex)
 ListNode_t List_GetNodeAtPos(List_t list, CdataIndex_t posIndex)
 {
     CHECK_PARAM(list != NULL, NULL);
-    CHECK_PARAM(node != NULL, NULL);
 	
 	List_st* p_list = CONVERT_2_LIST(list);
 	ListNode_t node = NULL;
@@ -1284,7 +1326,7 @@ ListNode_t List_GetNodeAtPos(List_t list, CdataIndex_t posIndex)
 
 ListNode_t List_GetHead(List_t list)
 {
-	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
+	CHECK_PARAM(list != NULL, NULL);
 	
 	ListNode_t node = NULL;
 	
@@ -1342,7 +1384,7 @@ ListNode_t List_GetPreNodeNL(List_t list,ListNode_t node)
     CHECK_PARAM(node != NULL, NULL);
 	
 	List_st* p_list = CONVERT_2_LIST(list);
-	if (p_list->type = LIST_TYPE_SINGLE_LINK)
+	if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		LOG_E("Hasn't pre node on a single list node.\n");
 		return NULL;
@@ -1373,12 +1415,12 @@ ListNode_t List_GetNextNodeNL(List_t list, ListNode_t node)
 	ListNode_t nextNode = NULL;
 	List_st* p_list = CONVERT_2_LIST(list);
 	
-	if (p_list->type = LIST_TYPE_DOUBLE_LINK)
+	if (p_list->type == LIST_TYPE_DOUBLE_LINK)
 	{
 		DBListNode_st *p_listNode = (DBListNode_st*)node;
 		nextNode = p_listNode->p_next;
 	}
-	else if (p_list->type = LIST_TYPE_SINGLE_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		SGListNode_st *p_listNode = (SGListNode_st*)node;
 		nextNode = p_listNode->p_next;
@@ -1412,12 +1454,12 @@ void*  List_GetNodeDataNL(List_t list, ListNode_t node)
 	List_st* p_list = CONVERT_2_LIST(list);
 	void *p_data = NULL;
 	
-	if (p_list->type = LIST_TYPE_DOUBLE_LINK)
+	if (p_list->type == LIST_TYPE_DOUBLE_LINK)
 	{
 		DBListNode_st *p_listNode = (DBListNode_st*)node;
 		p_data = p_listNode->p_data;
 	}
-	else if (p_list->type = LIST_TYPE_SINGLE_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		SGListNode_st *p_listNode = (SGListNode_st*)node;
 		p_data = p_listNode->p_data;
@@ -1448,14 +1490,16 @@ void*  List_DetachNodeDataNL(List_t list, ListNode_t node)
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(node != NULL, NULL);
 	
+	void*    p_data = NULL;
 	List_st* p_list = CONVERT_2_LIST(list);
+	
 	if (p_list->type == LIST_TYPE_DOUBLE_LINK)
 	{
 		DBListNode_st *p_listNode = (DBListNode_st*)node;
 		p_data = p_listNode->p_data;	
 		p_listNode->p_data = NULL;		
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		SGListNode_st *p_listNode = (SGListNode_st*)node;
 		p_data = p_listNode->p_data;	
@@ -1463,7 +1507,7 @@ void*  List_DetachNodeDataNL(List_t list, ListNode_t node)
 	}	
 	else
 	{
-		LOG_E("Invalid list type:%d.\n");
+		LOG_E("Invalid list type:%d.\n", p_list->type);
 	}
 	
 	return p_data;
@@ -1486,7 +1530,7 @@ ListNode_t List_GetFirstMatchNode(List_t list, void* p_userData)
 	}	
 	
 	List_Lock(list);
-	for (p_node = List_GetHeadNL(); p_node != NULL; p_node = List_GetNextNodeNL(list, p_node))
+	for (p_node = List_GetHeadNL(list); p_node != NULL; p_node = List_GetNextNodeNL(list, p_node))
 	{
 		p_data = List_GetNodeDataNL(list, p_node);
 		if (p_list->equalFn(p_data, p_userData))
@@ -1674,7 +1718,7 @@ ListNode_t List_GetLastMatchNodeByCond(List_t list, void* p_userData, ListCondit
 	return p_node;
 }
 
-ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn)
+ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData,                                      ListCondition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
 	CHECK_PARAM(startNode != NULL, NULL);
@@ -1750,13 +1794,13 @@ int List_DetachNodeNL(List_t list, ListNode_t node)
 	{
 		return DBList_DetachNode(list, node);
 	}
-	else if (p_list->type == LIST_TYPE_SINGLE_LINK_LINK)
+	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
 		return SGList_DetachNode(list, node);
 	}	
 	else
 	{
-		LOG_E("Invalid list type:%d.\n");
+		LOG_E("Invalid list type:%d.\n", p_list->type);
 	}
 	
 	return ERR_BAD_PARAM;
@@ -1766,6 +1810,7 @@ ListNode_t List_DetachHead(List_t list)
 {
     CHECK_PARAM(list != NULL, NULL);
 	
+	int ret = ERR_OK;
 	List_st* p_list = CONVERT_2_LIST(list);
 	
 	if (p_list->nodeCount == 0)
@@ -1773,22 +1818,36 @@ ListNode_t List_DetachHead(List_t list)
 		return NULL;
 	}	
 
-	return List_DetachNode(list, p_list->p_head);
+	ret = List_DetachNode(list, p_list->p_head);
+	if (ret != ERR_OK)
+	{
+		LOG_E("Fail to detach node.\n");
+		return NULL;		
+	}
+	
+	return p_list->p_head;
 }
 
 ListNode_t List_DetachTail(List_t list)
 {
     CHECK_PARAM(list != NULL, NULL);
 	
+	int ret = ERR_OK;
 	List_st* p_list = CONVERT_2_LIST(list);
-	ListNode_t head = NULL;
 	
 	if (p_list->nodeCount == 0)
 	{
 		return NULL;
 	}	
 
-	return List_DetachNode(list, p_list->p_tail);
+	ret = List_DetachNode(list, p_list->p_tail);
+	if (ret != ERR_OK)
+	{
+		LOG_E("Fail to detach node.\n");
+		return NULL;		
+	}
+	
+	return p_list->p_tail;	
 }
 
 ListNode_t List_DetachNodeAtPos(List_t list, CdataIndex_t posIndex)
@@ -2017,7 +2076,7 @@ int List_RmFirstMatchNode(List_t list, void* p_userData)
 	if (found)
 	{
 		List_DetachNode(list, p_node);
-		List_DestoryNode(list, p_node);
+		List_DestroyNode(list, p_node);
 	}
 	
 	return ERR_OK;
@@ -2047,7 +2106,7 @@ int List_RmFirstMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn 
 	if (found)
 	{
 		List_DetachNode(list, p_node);
-		List_DestoryNode(list, p_node);
+		List_DestroyNode(list, p_node);
 	}
 	
 	return ERR_OK;
@@ -2092,7 +2151,7 @@ CdataCount_t List_RmAllMatchNodes(List_t list, void* p_userData)
 			p_next = List_GetNextNodeNL(list, p_node);
 			
 			List_DetachNodeNL(list, p_node);
-			List_DestoryNode(list, p_node);
+			List_DestroyNode(list, p_node);
 		}
 		else
 		{
@@ -2136,7 +2195,7 @@ CdataCount_t List_RmAllMatchNodesByCond(List_t list, void* p_userData, ListCondi
 			p_next = List_GetNextNodeNL(list, p_node);
 			
 			List_DetachNodeNL(list, p_node);
-			List_DestoryNode(list, p_node);
+			List_DestroyNode(list, p_node);
 		}
 		else
 		{

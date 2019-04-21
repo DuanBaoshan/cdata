@@ -2,6 +2,7 @@
 #define _LIST_INTERNAL_H_
 
 #include "cdata_types.h"
+#include "cdata_list.h"
 
 typedef enum
 {

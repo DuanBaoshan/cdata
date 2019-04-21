@@ -30,6 +30,7 @@ Date:2019.4.2
 #define _CDATA_TYPES_H_
 
 #include <stdio.h>
+#include "errvalue.h"
 
 #ifdef __cplusplus
 #undef  __BEGIN_EXTERN_C_DECLS__
@@ -46,15 +47,6 @@ Date:2019.4.2
 #define CDATA_TRUE (1 == 1)
 #define CDATA_FALSE !(CDATA_TRUE)
 
-enum
-{
-    ERR_FAIL = -1,
-    ERR_OK = 0,
-    ERR_EOF,
-    ERR_OUT_MEM,
-    ERR_BAD_PARAM,
-    ERR_DATA_NOT_EXISTS,
-};
 
 typedef size_t CdataCount_t;
 typedef size_t CdataIndex_t;
