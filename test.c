@@ -29,8 +29,8 @@ typedef struct
 	int englishScore;
 }Student_t;
 
-static DBList_t g_normalList;
-static DBList_t g_studentList;
+static List_t g_normalList;
+static List_t g_studentList;
 
 static void ShowAllTestcases();
 static void RunTestcase(int id);
@@ -71,28 +71,28 @@ static Testcase_t g_testcaseArray[] =
 	{"Test rm node from list.", TestRm},
 	{"Test match data in list.", TestMatch},
 	{"Test multi thread.", TestMultiThread},
-	{"Test multi thread with DBList_Lock", TestMultiThreadLock},
+	{"Test multi thread with List_Lock", TestMultiThreadLock},
 };
 
 static int InitList()
 {
     int ret = ERR_OK;
     
-    ret = DBList_Create("NormalDataList", sizeof(int), &g_normalList);
+    ret = List_Create("NormalDataList", LIST_TYPE_DOUBLE_LINK, sizeof(int), &g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to create normal list.\n");
         return -1;
     }
 	
-    ret = DBList_CreateRef("StudentList", &g_studentList);
+    ret = List_CreateRef("StudentList", LIST_TYPE_DOUBLE_LINK, &g_studentList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to create normal list.\n");
         return -1;
     }
 
-	DBList_SetFreeDataFunc(g_studentList, FreeStudentData);
+	List_SetFreeDataFunc(g_studentList, FreeStudentData);
 	
 	return 0;
 }
@@ -101,14 +101,14 @@ static int DestroyList()
 {
     int ret = ERR_OK;
     
-    ret = DBList_Destory(g_normalList);
+    ret = List_Destory(g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy normal list.\n");
         return -1;
     }
 	
-    ret = DBList_Destory(g_studentList);
+    ret = List_Destory(g_studentList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy pointer list.\n");
@@ -197,20 +197,20 @@ static void TraverseIntList(DBListTraverseNodeInfo_t *p_info, void *p_userData, 
     return;
 }
 
-static int ShowIntList(DBList_t list)
+static int ShowIntList(List_t list)
 {
-    printf("=============%s Begin==================\n", DBList_Name(list));
-    DBList_Traverse(list, NULL, TraverseIntList);
-    printf("=============%s End==================\n", DBList_Name(list));
+    printf("=============%s Begin==================\n", List_Name(list));
+    List_Traverse(list, NULL, TraverseIntList);
+    printf("=============%s End==================\n", List_Name(list));
 	
 	return 0;
 }
 
-static int ShowIntListReversely(DBList_t list)
+static int ShowIntListReversely(List_t list)
 {
-    printf("=============%s Begin==================\n", DBList_Name(list));
-    DBList_TraverseReversely(list, NULL, TraverseIntList);
-    printf("=============%s End==================\n", DBList_Name(list));
+    printf("=============%s Begin==================\n", List_Name(list));
+    List_TraverseReversely(list, NULL, TraverseIntList);
+    printf("=============%s End==================\n", List_Name(list));
 	
 	return 0;
 }
@@ -228,14 +228,14 @@ static int TestNormalList()
     for (i = 0; i < count; i++)
     {
         value = i + 1;
-        DBList_InsertData(g_normalList, &value);
+        List_InsertData(g_normalList, &value);
     }
     printf("\n==>After inster data:\n");	
 	ShowIntList(g_normalList);
 	printf("\n==>Show int list reversely:\n");
     ShowIntListReversely(g_normalList);
 	
-	p_data = (int*)DBList_GetDataAtPos(g_normalList, 0);
+	p_data = (int*)List_GetDataAtPos(g_normalList, 0);
 	if (p_data == NULL)
 	{
 		LOG_E("Fail to get data.\n");
@@ -243,43 +243,43 @@ static int TestNormalList()
 	}
 	
 	printf("Get data:%d at position 0.\n", *p_data);	
-    DBList_Clear(g_normalList);
-    printf("After clear, list count:%d.\n", (int)DBList_Count(g_normalList));
+    List_Clear(g_normalList);
+    printf("After clear, list count:%d.\n", (int)List_Count(g_normalList));
 
-	//Test DBList_InsertData2Head
+	//Test List_InsertData2Head
 	count = 10;    
     LOG_A("count:%d.\n", count);    
     for (i = 0; i < count; i++)
     {
         value = i + 1;
-        DBList_InsertData2Head(g_normalList, &value);
+        List_InsertData2Head(g_normalList, &value);
     }	
 	ShowIntList(g_normalList);	
-	DBList_Clear(g_normalList);
+	List_Clear(g_normalList);
 	
-	//Test DBList_InsertDataAscently
+	//Test List_InsertDataAscently
     printf("\n==>I will test inserting normal data ascently.\n");	
 	count = 10;    
     LOG_A("count:%d.\n", count);    
     for (i = 0; i < count; i++)
     {
         value = i + 1;
-        DBList_InsertDataAscently(g_normalList, &value, IntLtListData);
+        List_InsertDataAscently(g_normalList, &value, IntLtListData);
     }	
 	ShowIntList(g_normalList);
-	DBList_Clear(g_normalList);
+	List_Clear(g_normalList);
 	
-	//Test DBList_InsertDataDescently
+	//Test List_InsertDataDescently
     printf("\n==>I will test inserting normal data descently.\n");	
 	count = 10;    
     LOG_A("count:%d.\n", count);    
     for (i = 0; i < count; i++)
     {
         value = i + 1;
-        DBList_InsertDataDescently(g_normalList, &value, IntLtListData);
+        List_InsertDataDescently(g_normalList, &value, IntLtListData);
     }
     ShowIntList(g_normalList);
-	DBList_Clear(g_normalList);	
+	List_Clear(g_normalList);	
     return 0;
 }
 
@@ -290,12 +290,12 @@ static int TestInsertDataAtPos()
 
 	int i = 0;
     int value = 0;
-	DBListNode_t node = NULL;	
+	ListNode_t node = NULL;	
 	
 	for (i = 0; i < 5; i++)
 	{
 		value = i + 1;
-		node = DBList_InsertData(g_normalList, &value);
+		node = List_InsertData(g_normalList, &value);
 		if (node == NULL)
 		{
 			LOG_E("Fail to insert data.\n");			
@@ -303,11 +303,11 @@ static int TestInsertDataAtPos()
 	}
 	
 	ShowIntList(g_normalList);
-	LOG_A("List count:%d.\n", (int)DBList_Count(g_normalList));
+	LOG_A("List count:%d.\n", (int)List_Count(g_normalList));
 	
 	value = 100;
 	LOG_A("Wil insert %d at 0.\n", value);
-	node = DBList_InsertDataAtPos(g_normalList, &value, 0);
+	node = List_InsertDataAtPos(g_normalList, &value, 0);
     if (node == NULL)
     {
         LOG_E("Fail to insert at position.\n");
@@ -315,11 +315,11 @@ static int TestInsertDataAtPos()
 		goto EXIT;
     }
 	ShowIntList(g_normalList);
-	LOG_A("List count:%d.\n", (int)DBList_Count(g_normalList));
+	LOG_A("List count:%d.\n", (int)List_Count(g_normalList));
 	
 	value = 100;
-	LOG_A("Wil insert %d at %d.\n", value, (int)(DBList_Count(g_normalList) - 1));
-	node = DBList_InsertDataAtPos(g_normalList, &value, DBList_Count(g_normalList) - 1);
+	LOG_A("Wil insert %d at %d.\n", value, (int)(List_Count(g_normalList) - 1));
+	node = List_InsertDataAtPos(g_normalList, &value, List_Count(g_normalList) - 1);
     if (node == NULL)
     {
         LOG_E("Fail to insert at position.\n");
@@ -331,7 +331,7 @@ static int TestInsertDataAtPos()
 	
 	value = 100;
 	LOG_A("Wil insert %d at 2.\n", value);
-	node = DBList_InsertDataAtPos(g_normalList, &value, 2);
+	node = List_InsertDataAtPos(g_normalList, &value, 2);
     if (node == NULL)
     {
         LOG_E("Fail to insert at position.\n");
@@ -343,7 +343,7 @@ static int TestInsertDataAtPos()
 	
 	errRet = 0;
 	EXIT:
-	ret = DBList_Clear(g_normalList);
+	ret = List_Clear(g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy list.\n");
@@ -381,19 +381,19 @@ static int TestStopTraverseNormalData()
 	for (i = 0; i < 10; i++)
 	{
 		value = random() % 100;
-		DBList_InsertData(g_normalList, &value);
+		List_InsertData(g_normalList, &value);
 	}
 	
     printf("All data in the list:\n");
     ShowIntList(g_normalList);
 
     printf("\nWill find the data which < userData:%d.\n", userData);
-	DBList_Traverse(g_normalList, &userData, TraverseStopIntList);
+	List_Traverse(g_normalList, &userData, TraverseStopIntList);
 	
 	printf("\nWill find the data which < userData:%d reversely.\n", userData);
-	DBList_TraverseReversely(g_normalList, &userData, TraverseStopIntList);
+	List_TraverseReversely(g_normalList, &userData, TraverseStopIntList);
 	
-    DBList_Clear(g_normalList);
+    List_Clear(g_normalList);
 	
     return 0;
 }
@@ -403,10 +403,10 @@ static int TestSwapPos()
 	int errRet = 0;
     int ret = ERR_OK;
     int value = 0;
-	DBListNode_t node = NULL;
+	ListNode_t node = NULL;
 	
 	value = 1;
-	node = DBList_InsertData(g_normalList, &value);
+	node = List_InsertData(g_normalList, &value);
 	if (node == NULL)
 	{
 	    LOG_E("Fail to insert data.\n");
@@ -414,74 +414,74 @@ static int TestSwapPos()
 		goto EXIT;
 	}
 	
-	DBListNode_t node1;
+	ListNode_t node1;
 	value = 2;	
-	ret = DBList_CreateNode(g_normalList, &value, &node1);
+	ret = List_CreateNode(g_normalList, &value, &node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
-	ret = DBList_InsertNode(g_normalList, node1);
+	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node1, NULL);
+		List_DestroyNode(node1, NULL);
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
 	value = 3;
-	node = DBList_InsertData(g_normalList, &value);
+	node = List_InsertData(g_normalList, &value);
 	if (node == NULL)
 	{
 	    LOG_E("Fail to insert data.\n");
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
-	DBListNode_t node2;
+	ListNode_t node2;
 	value = 4;	
-	ret = DBList_CreateNode(g_normalList, &value, &node2);
+	ret = List_CreateNode(g_normalList, &value, &node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");		
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
 	
-	ret = DBList_InsertNode(g_normalList, node2);
+	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node2, NULL);
+		List_DestroyNode(node2, NULL);
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
 	
 	value = 5;
-	node = DBList_InsertData(g_normalList, &value);
+	node = List_InsertData(g_normalList, &value);
 	if (node == NULL)
 	{
 	    LOG_E("Fail to insert data.\n");
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
 	
 	LOG_A("Before swap position.\n");
 	ShowIntList(g_normalList);
 	
-	DBList_SwapPos(g_normalList, node2, node1);
+	List_SwapPos(g_normalList, node2, node1);
 	
 	LOG_A("After swap position.\n");
 	ShowIntList(g_normalList);
@@ -489,7 +489,7 @@ static int TestSwapPos()
 	errRet = 0;
 	
 	EXIT:
-    ret = DBList_Clear(g_normalList);
+    ret = List_Clear(g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy list.\n");
@@ -504,41 +504,41 @@ static int TestSwapHeadTail()
 	int errRet = 0;
     int ret = ERR_OK;
     int value = 0;
-	DBListNode_t node = NULL;    
+	ListNode_t node = NULL;    
 	
-	DBListNode_t node1;
+	ListNode_t node1;
 	value = 1;	
-	ret = DBList_CreateNode(g_normalList, &value, &node1);
+	ret = List_CreateNode(g_normalList, &value, &node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
-	ret = DBList_InsertNode(g_normalList, node1);
+	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node1, NULL);
+		List_DestroyNode(node1, NULL);
         errRet = -1;
 		goto EXIT;
 	}	
 	
 	value = 2;
-	node = DBList_InsertData(g_normalList, &value);
+	node = List_InsertData(g_normalList, &value);
 	if (node == NULL)
 	{
 	    LOG_E("Fail to insert data.\n");
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
 	value = 3;
-	node = DBList_InsertData(g_normalList, &value);
+	node = List_InsertData(g_normalList, &value);
 	if (node == NULL)
 	{
 	    LOG_E("Fail to insert data.\n");
@@ -546,32 +546,32 @@ static int TestSwapHeadTail()
 		goto EXIT;
 	}
 	
-	DBListNode_t node2;
+	ListNode_t node2;
 	value = 4;	
-	ret = DBList_CreateNode(g_normalList, &value, &node2);
+	ret = List_CreateNode(g_normalList, &value, &node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");		
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
 	
-	ret = DBList_InsertNode(g_normalList, node2);
+	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node2, NULL);
+		List_DestroyNode(node2, NULL);
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
 	
 	LOG_A("Before swap position.\n");
 	ShowIntList(g_normalList);
 	
-	DBList_SwapPos(g_normalList, node2, node1);
+	List_SwapPos(g_normalList, node2, node1);
 	
 	LOG_A("After swap position.\n");
 	ShowIntList(g_normalList);
@@ -579,7 +579,7 @@ static int TestSwapHeadTail()
 	errRet = 0;
 	
 	EXIT:
-    ret = DBList_Clear(g_normalList);
+    ret = List_Clear(g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy list.\n");
@@ -595,10 +595,10 @@ static int TestSwapNeighbour()
 
     int ret = ERR_OK;
     int value = 0;
-	DBListNode_t node = NULL;
+	ListNode_t node = NULL;
 	
 	value = 1;
-	node = DBList_InsertData(g_normalList, &value);
+	node = List_InsertData(g_normalList, &value);
 	if (node == NULL)
 	{
 	    LOG_E("Fail to insert data.\n");
@@ -606,53 +606,53 @@ static int TestSwapNeighbour()
 		goto EXIT;
 	}
 	
-	DBListNode_t node1;
+	ListNode_t node1;
 	value = 2;	
-	ret = DBList_CreateNode(g_normalList, &value, &node1);
+	ret = List_CreateNode(g_normalList, &value, &node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
-	ret = DBList_InsertNode(g_normalList, node1);
+	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node1, NULL);
+		List_DestroyNode(node1, NULL);
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
-	DBListNode_t node2;
+	ListNode_t node2;
 	value = 3;	
-	ret = DBList_CreateNode(g_normalList, &value, &node2);
+	ret = List_CreateNode(g_normalList, &value, &node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");		
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
 	
-	ret = DBList_InsertNode(g_normalList, node2);
+	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node2, NULL);
+		List_DestroyNode(node2, NULL);
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));	
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
 	value = 4;
-	node = DBList_InsertData(g_normalList, &value);
+	node = List_InsertData(g_normalList, &value);
 	if (node == NULL)
 	{
 	    LOG_E("Fail to insert data.\n");
@@ -663,7 +663,7 @@ static int TestSwapNeighbour()
 	LOG_A("Before swap position.\n");
 	ShowIntList(g_normalList);
 	
-	DBList_SwapPos(g_normalList, node2, node1);
+	List_SwapPos(g_normalList, node2, node1);
 	
 	LOG_A("After swap position.\n");
 	ShowIntList(g_normalList);
@@ -671,7 +671,7 @@ static int TestSwapNeighbour()
 	errRet = 0;
 	
 	EXIT:
-    ret = DBList_Clear(g_normalList);
+    ret = List_Clear(g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy list.\n");
@@ -688,55 +688,55 @@ static int TestSwapNeighbourHeadTail()
     int ret = ERR_OK;
     int value = 0;   
 		
-	DBListNode_t node1;
+	ListNode_t node1;
 	value = 1;	
-	ret = DBList_CreateNode(g_normalList, &value, &node1);
+	ret = List_CreateNode(g_normalList, &value, &node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
-	ret = DBList_InsertNode(g_normalList, node1);
+	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node1, NULL);
+		List_DestroyNode(node1, NULL);
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
-	DBListNode_t node2;
+	ListNode_t node2;
 	value = 2;	
-	ret = DBList_CreateNode(g_normalList, &value, &node2);
+	ret = List_CreateNode(g_normalList, &value, &node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to create node.\n");		
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
 	
-	ret = DBList_InsertNode(g_normalList, node2);
+	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		DBList_DestroyNode(node2, NULL);
+		List_DestroyNode(node2, NULL);
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, DBList_GetNextNode(node2), DBList_GetPreNode(node2));	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, DBList_GetNextNode(node1), DBList_GetPreNode(node1));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));	
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
 	
 	LOG_A("Before swap position.\n");
 	ShowIntList(g_normalList);
 	
-	DBList_SwapPos(g_normalList, node1, node2);
+	List_SwapPos(g_normalList, node1, node2);
 	
 	LOG_A("After swap position.\n");
 	ShowIntList(g_normalList);
@@ -744,7 +744,7 @@ static int TestSwapNeighbourHeadTail()
 	errRet = 0;
 	
 	EXIT:
-	DBList_Clear(g_normalList);
+	List_Clear(g_normalList);
 
 	return errRet;
 }
@@ -791,7 +791,7 @@ static Student_t* CreateStudent(const char* p_name,
 }
 
 
-static DBListNode_t CreateStudentNode(const char* p_name, 	
+static ListNode_t CreateStudentNode(const char* p_name, 	
 								char sex,
 								int age,
 								int chineseScore,								
@@ -811,8 +811,8 @@ static DBListNode_t CreateStudentNode(const char* p_name,
 		return NULL;
 	}
 	
-	DBListNode_t node = NULL;
-	if (DBList_CreateNode(g_studentList, p_student, &node) != ERR_OK)
+	ListNode_t node = NULL;
+	if (List_CreateNode(g_studentList, p_student, &node) != ERR_OK)
 	{
 		LOG_E("Fail to create node.\n");
 		
@@ -855,11 +855,11 @@ static void ShowStudent(DBListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, 
 	return ;
 }
 
-static int ShowStudentList(DBList_t list)
+static int ShowStudentList(List_t list)
 {
-	printf("====================%s Begin============================\n", DBList_Name(list));
-	DBList_Traverse(list, NULL, ShowStudent);
-	printf("====================%s End============================\n\n", DBList_Name(list));
+	printf("====================%s Begin============================\n", List_Name(list));
+	List_Traverse(list, NULL, ShowStudent);
+	printf("====================%s End============================\n\n", List_Name(list));
 	return 0;
 }
 
@@ -875,32 +875,32 @@ CdataBool TotalScoreDescent(void* p_listNodeData, void* p_userData)
 }
 static int CreateStudentList()
 {
-	DBList_Clear(g_studentList);
-	DBListNode_t node = NULL;
+	List_Clear(g_studentList);
+	ListNode_t node = NULL;
 	
 	node = CreateStudentNode("Jack", 'M', 10, 78, 82, 67);
-	DBList_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
 	
 	node = CreateStudentNode("Jan", 'F', 10, 90, 96, 80);
-	DBList_InsertNodeDescently(g_studentList, node, TotalScoreDescent);
+	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);
 	
 	node = CreateStudentNode("Lily", 'F', 10, 87, 76, 80);
-	DBList_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
 	
 	node = CreateStudentNode("Jack", 'M', 11, 89, 93, 78);
-	DBList_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
 	
 	Student_t *p_student = CreateStudent("Alice", 'F', 12, 97, 88, 79);
-	DBList_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);	
+	List_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);	
 	
 	node = CreateStudentNode("John", 'M', 11, 85, 79, 94);
-	DBList_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
 
 	p_student = CreateStudent("John", 'M', 12, 62, 74, 76);
-	DBList_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);	
+	List_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);	
 	
 	p_student = CreateStudent("Tom", 'M', 10, 93, 100, 91);
-	DBList_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);		
+	List_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);		
 	
 	return 0;
 }
@@ -955,17 +955,17 @@ static int TestNormalStructureList()
 {
 	Student_t student;
 	Student_t *p_student = NULL;
-	DBList_t  list;
+	List_t  list;
 	int total = 0;
-	DBListNode_t node = NULL;
+	ListNode_t node = NULL;
 	
-	int ret = DBList_Create("StructureList", sizeof(Student_t), &list);	
+	int ret = List_Create("StructureList", sizeof(Student_t), &list);	
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to create list.\n");
 		return -1;
 	}
-	DBList_SetFreeDataFunc(list, FreeStudentData);
+	List_SetFreeDataFunc(list, FreeStudentData);
 	
 	int nameMaxLen = 128;
 	
@@ -977,7 +977,7 @@ static int TestNormalStructureList()
 	student.chineseScore = 88;
 	student.mathScore = 88;
 	student.englishScore = 88;
-	node = DBList_InsertData(list, &student);
+	node = List_InsertData(list, &student);
 	
 	student.p_name = (char*)malloc(nameMaxLen);
 	memset(student.p_name, 0, nameMaxLen);
@@ -987,7 +987,7 @@ static int TestNormalStructureList()
 	student.chineseScore = 79;
 	student.mathScore = 88;
 	student.englishScore = 92;
-	node = DBList_InsertData(list, &student);
+	node = List_InsertData(list, &student);
 
 	student.p_name = (char*)malloc(nameMaxLen);
 	memset(student.p_name, 0, nameMaxLen);
@@ -997,33 +997,33 @@ static int TestNormalStructureList()
 	student.chineseScore = 72;
 	student.mathScore = 69;
 	student.englishScore = 91;
-	node = DBList_InsertData(list, &student);
+	node = List_InsertData(list, &student);
 	
-	LOG_I("Count:%d.\n", (int)DBList_Count(list));
+	LOG_I("Count:%d.\n", (int)List_Count(list));
 	
 	printf("==>Show student list from head to tail:\n");
-	printf("===============%s begin=============================\n", DBList_Name(list));
-	FOR_EACH_IN_DBLIST(node, list)
+	printf("===============%s begin=============================\n", List_Name(list));
+	FOR_EACH_IN_LIST(node, list)
 	{
-		p_student = (Student_t*)DBList_GetNodeData(node);
+		p_student = (Student_t*)List_GetNodeData(node);
 		
 		total = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
 		printf("name:%s, sex:'%c', age:%d, total:%d, chinese:%d, math:%d, english:%d.\n", p_student->p_name, p_student->sex, p_student->age, total, p_student->chineseScore, p_student->mathScore, p_student->englishScore);
 	}
-	printf("===============%s begin=============================\n", DBList_Name(list));	
+	printf("===============%s begin=============================\n", List_Name(list));	
 
 	printf("\n\n==>Show student list from tail to head:\n");
-	printf("===============%s begin=============================\n", DBList_Name(list));
+	printf("===============%s begin=============================\n", List_Name(list));
 	FOR_EACH_IN_DBLIST_REVERSE(node, list)
 	{
-		p_student = (Student_t*)DBList_GetNodeData(node);
+		p_student = (Student_t*)List_GetNodeData(node);
 		
 		total = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
 		printf("name:%s, sex:'%c', age:%d, total:%d, chinese:%d, math:%d, english:%d.\n", p_student->p_name, p_student->sex, p_student->age, total, p_student->chineseScore, p_student->mathScore, p_student->englishScore);
 	}
-	printf("===============%s begin=============================\n", DBList_Name(list));	
+	printf("===============%s begin=============================\n", List_Name(list));	
 
-	DBList_Destory(list);
+	List_Destory(list);
 	
 	return 0;	
 }
@@ -1042,22 +1042,22 @@ static int TestReferenceList()
 	condition.sex = 'M';
 	condition.age = -1;
 	
-	// Test DBList_GetMachCount
+	// Test List_GetMachCount
 	CdataCount_t count = 0;
-	DBList_GetMachCount(g_studentList, &condition, FindJohn, &count);
+	List_GetMachCount(g_studentList, &condition, FindJohn, &count);
 	LOG_A("Find boys with name '%s', count:%u.\n", condition.name, count);
 	
-	//Test DBList_DataExists
+	//Test List_DataExists
 	memset(condition.name, 0, sizeof(condition.name));
 	strcpy(condition.name, "John");
 	condition.age = 11;
-	if (DBList_DataExists(g_studentList, &condition, FindJohn))
+	if (List_DataExists(g_studentList, &condition, FindJohn))
 	{
 		LOG_A("Find John with age:%d.\n", condition.age);
 	}	
 	
 	condition.age = 14;
-	if (DBList_DataExists(g_studentList, &condition, FindJohn))
+	if (List_DataExists(g_studentList, &condition, FindJohn))
 	{
 		LOG_A("Find John with age:%d.\n", condition.age);
 	}
@@ -1069,31 +1069,31 @@ static int TestReferenceList()
 	//Test get node by condition
 	condition.age = 11;	
 	LOG_A("Condition: name:%s, sex:'%c', age:%d.\n", condition.name, condition.sex, condition.age);	
-	DBListNode_t node = DBList_GetFirstMatchNode(g_studentList, &condition, FindJohn);
+	ListNode_t node = List_GetFirstMatchNode(g_studentList, &condition, FindJohn);
 	if (node != NULL)
 	{
-		p_student = (Student_t *)DBList_GetNodeData(node);
+		p_student = (Student_t *)List_GetNodeData(node);
 		LOG_A("Find John's information: chineseScore:%d, math:%d, english:%d.\n", p_student->chineseScore, p_student->mathScore, p_student->englishScore);
 	}
 	
 	p_student = CreateStudent("BeforeStu", 'M', 12, 80, 98, 90);
-	DBList_InsertDataBefore(g_studentList, node, p_student);
+	List_InsertDataBefore(g_studentList, node, p_student);
 	LOG_A("After insert before:\n");
 	ShowStudentList(g_studentList);
 	
 	p_student = CreateStudent("AfterStu", 'M', 13, 89, 70, 94);
-	DBList_InsertDataAfter(g_studentList, node, p_student);
+	List_InsertDataAfter(g_studentList, node, p_student);
 	LOG_A("After insert after:\n");
 	ShowStudentList(g_studentList);
 	
-	DBList_Clear(g_studentList);
+	List_Clear(g_studentList);
 	return 0;
 }
 
 static int TestDetach()
 {
 	Student_t* p_student = NULL;
-	DBListNode_t node = NULL;
+	ListNode_t node = NULL;
 	
 	CreateStudentList();
 	ShowStudentList(g_studentList);
@@ -1105,52 +1105,52 @@ static int TestDetach()
 	condition.sex = 'M';
 	condition.age = 11;	
 	LOG_A("Condition: name:%s, sex:'%c', age:%d.\n", condition.name, condition.sex, condition.age);	
-	node = DBList_GetFirstMatchNode(g_studentList, &condition, FindJohn);
+	node = List_GetFirstMatchNode(g_studentList, &condition, FindJohn);
 	if (node != NULL)
 	{
-		p_student = (Student_t *)DBList_GetNodeData(node);
+		p_student = (Student_t *)List_GetNodeData(node);
 
-		DBList_DetachNode(g_studentList, node);	
+		List_DetachNode(g_studentList, node);	
 		LOG_A("After detach stduent(Name:%s, sex:'%c', age:%d) from student list.\n", p_student->p_name, p_student->sex, p_student->age);
 		ShowStudentList(g_studentList);	
-		DBList_DestroyNode(g_studentList, node);		
+		List_DestroyNode(g_studentList, node);		
 	}		
 	
-	node = DBList_DetachNodeAtPos(g_studentList, 1);
-	p_student = (Student_t*)DBList_DetachNodeData(node);
-	DBList_DestroyNode(g_studentList, node);	
+	node = List_DetachNodeAtPos(g_studentList, 1);
+	p_student = (Student_t*)List_DetachNodeData(node);
+	List_DestroyNode(g_studentList, node);	
 	LOG_A("After detach stduent(Name:%s, sex:'%c', age:%d) from student list at position 1.\n", p_student->p_name, p_student->sex, p_student->age);
 	FreeStudentData(p_student);
 	ShowStudentList(g_studentList);		
 	
 	char sex = 'M';
-	p_student = DBList_DetachData(g_studentList, &sex, FindBySex);
+	p_student = List_DetachData(g_studentList, &sex, FindBySex);
 	LOG_A("After detach first 'M', name:%s, age:%d.\n", p_student->p_name, p_student->age);	
 	ShowStudentList(g_studentList);	
 	FreeStudentData(p_student);
 	
-	node = DBList_DetachHead(g_studentList);
-	p_student = DBList_GetNodeData(node);
+	node = List_DetachHead(g_studentList);
+	p_student = List_GetNodeData(node);
 	LOG_A("Detach head:%s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
-	DBList_DestroyNode(g_studentList, node);	
+	List_DestroyNode(g_studentList, node);	
 	LOG_A("After detach head.\n");	
 	ShowStudentList(g_studentList);	
 
-	node = DBList_DetachTail(g_studentList);
-	p_student = DBList_GetNodeData(node);
+	node = List_DetachTail(g_studentList);
+	p_student = List_GetNodeData(node);
 	LOG_A("Detach tail:%s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
-	DBList_DestroyNode(g_studentList, node);	
+	List_DestroyNode(g_studentList, node);	
 	LOG_A("After detach tail.\n");	
 	ShowStudentList(g_studentList);
 	
-	DBList_Clear(g_studentList);
+	List_Clear(g_studentList);
 	return 0;
 }
 
 static int TestRm()
 {
 	Student_t* p_student = NULL;
-	DBListNode_t node = NULL;
+	ListNode_t node = NULL;
 	
 	CreateStudentList();
 	ShowStudentList(g_studentList);
@@ -1161,40 +1161,40 @@ static int TestRm()
 	condition.sex = 'M';
 	condition.age = 11;	
 	LOG_A("Condition: name:%s, sex:'%c', age:%d.\n", condition.name, condition.sex, condition.age);	
-	node = DBList_GetFirstMatchNode(g_studentList, &condition, FindJohn);
+	node = List_GetFirstMatchNode(g_studentList, &condition, FindJohn);
 	if (node != NULL)
 	{
-		p_student = (Student_t *)DBList_GetNodeData(node);
+		p_student = (Student_t *)List_GetNodeData(node);
 		LOG_A("After rm stduent(Name:%s, sex:'%c', age:%d) from student list.\n", p_student->p_name, p_student->sex, p_student->age);
 		
-		DBList_RmNode(g_studentList, node);			
+		List_RmNode(g_studentList, node);			
 		ShowStudentList(g_studentList);			
 	}	
 	
 	
-	DBList_RmHead(g_studentList);
+	List_RmHead(g_studentList);
 	LOG_A("After rm head:\n");
 	ShowStudentList(g_studentList);	
 
-	DBList_RmTail(g_studentList);
+	List_RmTail(g_studentList);
 	LOG_A("After rm tail:\n");
 	ShowStudentList(g_studentList);	
 	
-	DBList_RmNodeAtPos(g_studentList, 1);
+	List_RmNodeAtPos(g_studentList, 1);
 	LOG_A("After rm from position 1:\n");
 	ShowStudentList(g_studentList);	
 	
 	char sex = 'M';
-	DBList_RmFirstMatchNode(g_studentList, &sex, FindBySex);
+	List_RmFirstMatchNode(g_studentList, &sex, FindBySex);
 	LOG_A("After rm firt match sex 'M':\n");
 	ShowStudentList(g_studentList);		
 	
 	sex = 'F';
-	DBList_RmAllMatchNodes(g_studentList, &sex, FindBySex);
+	List_RmAllMatchNodesByCond(g_studentList, &sex, FindBySex);
 	LOG_A("After rm all match sex 'F':\n");
 	ShowStudentList(g_studentList);	
 	
-	DBList_Clear(g_studentList);
+	List_Clear(g_studentList);
 	
 	return 0;	
 }
@@ -1202,32 +1202,32 @@ static int TestRm()
 static int TestMatch()
 {
 	Student_t* p_student = NULL;
-	DBListNode_t node = NULL;
+	ListNode_t node = NULL;
 	CreateStudentList();
 	ShowStudentList(g_studentList);
 	
 	LOG_A("Find all 'M' from head to tail.\n");
 	char sex = 'M';
-	for (node = DBList_GetFirstMatchNode(g_studentList, &sex, FindBySex); node != NULL;)
+	for (node = List_GetFirstMatchNodeByCond(g_studentList, &sex, FindBySex); node != NULL;)
 	{
-		p_student = (Student_t*)DBList_GetNodeData(node);
+		p_student = (Student_t*)List_GetNodeData(g_studentList, node);
 		LOG_A("Find %s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
 		
-		node = DBList_GetNextNode(node);
-		node = DBList_GetNextMatchNode(g_studentList, node, &sex, FindBySex);
+		node = List_GetNextNode(g_studentList, node);
+		node = List_GetNextMatchNodeByCond(g_studentList, node, &sex, FindBySex);
 	}
 	
 	LOG_A("Find all 'M' from tail to head.\n");
-	for (node = DBList_GetLastMatchNode(g_studentList, &sex, FindBySex); node != NULL;)
+	for (node = List_GetLastMatchNodeByCond(g_studentList, &sex, FindBySex); node != NULL;)
 	{
-		p_student = (Student_t*)DBList_GetNodeData(node);
+		p_student = (Student_t*)List_GetNodeData(g_studentList, node);
 		LOG_A("Find %s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
 		
-		node = DBList_GetPreNode(node);
-		node = DBList_GetPreMatchNode(g_studentList, node, &sex, FindBySex);
+		node = List_GetPreNode(g_studentList, node);
+		node = List_GetPreMatchNodeByCond(g_studentList, node, &sex, FindBySex);
 	}	
 	
-	DBList_Clear(g_studentList);
+	List_Clear(g_studentList);
 	
 	return 0;
 }
@@ -1245,7 +1245,7 @@ static void* InsertThread(void *p_param)
 		p_student = CreateStudent(name, 'M', 12, 90, 83, 81);
 		
 		LOG_A("Insert:'%s'.\n", name);
-		DBList_InsertData(g_studentList, p_student);
+		List_InsertData(g_studentList, p_student);
 		sleep(1);
 	}
 	return NULL;
@@ -1258,7 +1258,7 @@ static void* FreeThread(void *p_param)
 	
 	for (count  = 0; count < 15; count++)
 	{
-		p_student = DBList_GetHeadData(g_studentList);
+		p_student = List_GetHeadData(g_studentList);
 		if (p_student != NULL)
 		{
 			LOG_A("Free student:'%s'.\n", p_student->p_name);
@@ -1267,7 +1267,7 @@ static void* FreeThread(void *p_param)
 		{
 			LOG_A("p_student is NULL.\n");
 		}
-		DBList_RmHead(g_studentList);
+		List_RmHead(g_studentList);
 		sleep(1);
 	}
 	
@@ -1279,7 +1279,7 @@ static int TestMultiThread()
 	pthread_t id1;
 	pthread_t id2;
 	
-	DBList_Clear(g_studentList);
+	List_Clear(g_studentList);
 	
 	pthread_create(&id1, NULL, InsertThread, NULL);
 	pthread_create(&id2, NULL, FreeThread, NULL);
@@ -1292,7 +1292,7 @@ static int TestMultiThread()
 
 static void* WriteThread(void *p_param)
 {
-	DBList_t list = *((DBList_t*)(p_param));
+	List_t list = *((List_t*)(p_param));
 	Student_t student;
 	
 	int i = 0; 
@@ -1305,9 +1305,7 @@ static void* WriteThread(void *p_param)
 		student.age = 12;
 		
 		LOG_A("Insert %s.\n", student.p_name);
-		DBList_Lock(list);
-		DBList_InsertDataNL(list, &student);		
-		DBList_UnLock(list);
+		List_InsertData(list, &student);		
 		
 		sleep(1);
 	}
@@ -1316,9 +1314,9 @@ static void* WriteThread(void *p_param)
 
 static void* ReadThread(void *p_param)
 {
-	DBList_t list = *((DBList_t*)(p_param));
+	List_t list = *((List_t*)(p_param));
 	
-	DBListNode_t node = NULL;
+	ListNode_t node = NULL;
 	Student_t *p_student = NULL;	
 	int i = 0;
 	
@@ -1326,13 +1324,13 @@ static void* ReadThread(void *p_param)
 	{
 		LOG_A("Student list:\n");
 		
-		DBList_Lock(list);
-		FOR_EACH_IN_DBLIST(node, list)
+		List_Lock(list);
+		FOR_EACH_IN_LIST(node, list)
 		{
-			p_student = DBList_GetNodeData(node);
+			p_student = List_GetNodeData(list, node);
 			printf("%s\n", p_student->p_name);
 		}
-		DBList_UnLock(list);
+		List_UnLock(list);
 		
 		printf("\n");
 		sleep(2);
@@ -1345,8 +1343,8 @@ static int TestMultiThreadLock()
 	pthread_t id1;
 	pthread_t id2;
 	
-	DBList_t list;
-	DBList_Create("TestList", sizeof(Student_t), &list);
+	List_t list;
+	List_Create("TestList", LIST_TYPE_DOUBLE_LINK, sizeof(Student_t), &list);
 	
 	pthread_create(&id1, NULL, WriteThread, &list);
 	pthread_create(&id2, NULL, ReadThread, &list);
@@ -1354,6 +1352,6 @@ static int TestMultiThreadLock()
 	pthread_join(id1, NULL);
 	pthread_join(id2, NULL);
 	
-	DBList_Destory(list);
+	List_Destory(list);
 	return 0;
 }
