@@ -37,8 +37,12 @@ static void RunTestcase(int id);
 
 static int InitList();
 static int DestroyList();
-static void FreeStudentData(void* p_data);
 
+
+static void FreeStudentData(void* p_data);
+CdataBool TotalScoreDescent(void* p_listNodeData, void* p_userData);
+
+CdataBool IntLtListData(void* p_nodeData, void* p_userData);
 static int TestNormalList();
 static int TestInsertDataAtPos();
 static int TestStopTraverseNormalData();
@@ -84,6 +88,8 @@ static int InitList()
         LOG_E("Fail to create normal list.\n");
         return -1;
     }
+	List_SetUserLtNodeFunc(g_studentList, IntLtListData);
+	
 	
     ret = List_CreateRef("StudentList", LIST_TYPE_DOUBLE_LINK, &g_studentList);
     if (ret != ERR_OK)
@@ -93,6 +99,7 @@ static int InitList()
     }
 
 	List_SetFreeDataFunc(g_studentList, FreeStudentData);
+	List_SetUserLtNodeFunc(g_studentList, TotalScoreDescent);
 	
 	return 0;
 }
@@ -188,7 +195,7 @@ CdataBool IntLtListData(void* p_nodeData, void* p_userData)
     return userData < nodeData;
 }
 
-static void TraverseIntList(DBListTraverseNodeInfo_t *p_info, void *p_userData, CdataBool* p_needStop)
+static void TraverseIntList(ListTraverseNodeInfo_t *p_info, void *p_userData, CdataBool* p_needStop)
 {
     int data = *((int *)p_info->p_data);
     int index = (int)p_info->index;
@@ -264,7 +271,7 @@ static int TestNormalList()
     for (i = 0; i < count; i++)
     {
         value = i + 1;
-        List_InsertDataAscently(g_normalList, &value, IntLtListData);
+        List_InsertDataAscently(g_normalList, &value);
     }	
 	ShowIntList(g_normalList);
 	List_Clear(g_normalList);
@@ -276,7 +283,7 @@ static int TestNormalList()
     for (i = 0; i < count; i++)
     {
         value = i + 1;
-        List_InsertDataDescently(g_normalList, &value, IntLtListData);
+        List_InsertDataDescently(g_normalList, &value);
     }
     ShowIntList(g_normalList);
 	List_Clear(g_normalList);	
@@ -353,7 +360,7 @@ static int TestInsertDataAtPos()
     return errRet;
 }
 
-static void TraverseStopIntList(DBListTraverseNodeInfo_t *p_info, void *p_userData, CdataBool* p_needStop)
+static void TraverseStopIntList(ListTraverseNodeInfo_t *p_info, void *p_userData, CdataBool* p_needStop)
 {
     int data = *((int *)p_info->p_data);
     int index = (int)p_info->index;
@@ -423,7 +430,7 @@ static int TestSwapPos()
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
@@ -434,7 +441,7 @@ static int TestSwapPos()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	value = 3;
 	node = List_InsertData(g_normalList, &value);
@@ -444,7 +451,7 @@ static int TestSwapPos()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	ListNode_t node2;
 	value = 4;	
@@ -455,18 +462,18 @@ static int TestSwapPos()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
 	
 	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		List_DestroyNode(node2, NULL);
+		List_DestroyNode(g_normalList, node2);
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
 	
 	value = 5;
 	node = List_InsertData(g_normalList, &value);
@@ -476,7 +483,7 @@ static int TestSwapPos()
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
 	
 	LOG_A("Before swap position.\n");
 	ShowIntList(g_normalList);
@@ -515,7 +522,7 @@ static int TestSwapHeadTail()
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
@@ -535,7 +542,7 @@ static int TestSwapHeadTail()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	value = 3;
 	node = List_InsertData(g_normalList, &value);
@@ -555,7 +562,7 @@ static int TestSwapHeadTail()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
 	
 	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
@@ -566,7 +573,7 @@ static int TestSwapHeadTail()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
 	
 	LOG_A("Before swap position.\n");
 	ShowIntList(g_normalList);
@@ -615,7 +622,7 @@ static int TestSwapNeighbour()
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
@@ -626,7 +633,7 @@ static int TestSwapNeighbour()
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	ListNode_t node2;
 	value = 3;	
@@ -637,7 +644,7 @@ static int TestSwapNeighbour()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
 	
 	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
@@ -648,8 +655,8 @@ static int TestSwapNeighbour()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));	
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	value = 4;
 	node = List_InsertData(g_normalList, &value);
@@ -697,7 +704,7 @@ static int TestSwapNeighbourHeadTail()
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	ret = List_InsertNode(g_normalList, node1);
 	if (ret != ERR_OK)
@@ -708,7 +715,7 @@ static int TestSwapNeighbourHeadTail()
         errRet = -1;
 		goto EXIT;
 	}	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	ListNode_t node2;
 	value = 2;	
@@ -719,19 +726,19 @@ static int TestSwapNeighbourHeadTail()
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
 	
 	ret = List_InsertNode(g_normalList, node2);
 	if (ret != ERR_OK)
 	{
 	    LOG_E("Fail to insert node.\n");
 		
-		List_DestroyNode(node2, NULL);
+		List_DestroyNode(g_normalList, node2);
         errRet = -1;
 		goto EXIT;
 	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(node2), List_GetPreNode(node2));	
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(node1), List_GetPreNode(node1));
+	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));	
+	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
 	
 	LOG_A("Before swap position.\n");
 	ShowIntList(g_normalList);
@@ -840,7 +847,7 @@ static void FreeStudentData(void* p_data)
 	return ;
 }
 
-static void ShowStudent(DBListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)
+static void ShowStudent(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)
 {
 	if (p_nodeInfo == NULL)
 	{
@@ -879,28 +886,28 @@ static int CreateStudentList()
 	ListNode_t node = NULL;
 	
 	node = CreateStudentNode("Jack", 'M', 10, 78, 82, 67);
-	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node);	
 	
 	node = CreateStudentNode("Jan", 'F', 10, 90, 96, 80);
-	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);
+	List_InsertNodeDescently(g_studentList, node);
 	
 	node = CreateStudentNode("Lily", 'F', 10, 87, 76, 80);
-	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node);	
 	
 	node = CreateStudentNode("Jack", 'M', 11, 89, 93, 78);
-	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node);	
 	
 	Student_t *p_student = CreateStudent("Alice", 'F', 12, 97, 88, 79);
-	List_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);	
+	List_InsertDataDescently(g_studentList, p_student);	
 	
 	node = CreateStudentNode("John", 'M', 11, 85, 79, 94);
-	List_InsertNodeDescently(g_studentList, node, TotalScoreDescent);	
+	List_InsertNodeDescently(g_studentList, node);	
 
 	p_student = CreateStudent("John", 'M', 12, 62, 74, 76);
-	List_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);	
+	List_InsertDataDescently(g_studentList, p_student);	
 	
 	p_student = CreateStudent("Tom", 'M', 10, 93, 100, 91);
-	List_InsertDataDescently(g_studentList, p_student, TotalScoreDescent);		
+	List_InsertDataDescently(g_studentList, p_student);		
 	
 	return 0;
 }
@@ -959,7 +966,7 @@ static int TestNormalStructureList()
 	int total = 0;
 	ListNode_t node = NULL;
 	
-	int ret = List_Create("StructureList", sizeof(Student_t), &list);	
+	int ret = List_Create("StructureList", LIST_TYPE_DOUBLE_LINK, sizeof(Student_t), &list);	
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to create list.\n");
@@ -1005,7 +1012,7 @@ static int TestNormalStructureList()
 	printf("===============%s begin=============================\n", List_Name(list));
 	FOR_EACH_IN_LIST(node, list)
 	{
-		p_student = (Student_t*)List_GetNodeData(node);
+		p_student = (Student_t*)List_GetNodeData(list, node);
 		
 		total = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
 		printf("name:%s, sex:'%c', age:%d, total:%d, chinese:%d, math:%d, english:%d.\n", p_student->p_name, p_student->sex, p_student->age, total, p_student->chineseScore, p_student->mathScore, p_student->englishScore);
@@ -1016,7 +1023,7 @@ static int TestNormalStructureList()
 	printf("===============%s begin=============================\n", List_Name(list));
 	FOR_EACH_IN_DBLIST_REVERSE(node, list)
 	{
-		p_student = (Student_t*)List_GetNodeData(node);
+		p_student = (Student_t*)List_GetNodeData(list, node);
 		
 		total = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
 		printf("name:%s, sex:'%c', age:%d, total:%d, chinese:%d, math:%d, english:%d.\n", p_student->p_name, p_student->sex, p_student->age, total, p_student->chineseScore, p_student->mathScore, p_student->englishScore);
@@ -1044,20 +1051,20 @@ static int TestReferenceList()
 	
 	// Test List_GetMachCount
 	CdataCount_t count = 0;
-	List_GetMachCount(g_studentList, &condition, FindJohn, &count);
-	LOG_A("Find boys with name '%s', count:%u.\n", condition.name, count);
+	List_GetMachCountByCond(g_studentList, &condition, FindJohn, &count);
+	LOG_A("Find boys with name '%s', count:%lu.\n", condition.name, count);
 	
-	//Test List_DataExists
+	//Test List_DataExistsByCond
 	memset(condition.name, 0, sizeof(condition.name));
 	strcpy(condition.name, "John");
 	condition.age = 11;
-	if (List_DataExists(g_studentList, &condition, FindJohn))
+	if (List_DataExistsByCond(g_studentList, &condition, FindJohn))
 	{
 		LOG_A("Find John with age:%d.\n", condition.age);
 	}	
 	
 	condition.age = 14;
-	if (List_DataExists(g_studentList, &condition, FindJohn))
+	if (List_DataExistsByCond(g_studentList, &condition, FindJohn))
 	{
 		LOG_A("Find John with age:%d.\n", condition.age);
 	}
@@ -1069,10 +1076,10 @@ static int TestReferenceList()
 	//Test get node by condition
 	condition.age = 11;	
 	LOG_A("Condition: name:%s, sex:'%c', age:%d.\n", condition.name, condition.sex, condition.age);	
-	ListNode_t node = List_GetFirstMatchNode(g_studentList, &condition, FindJohn);
+	ListNode_t node = List_GetFirstMatchNodeByCond(g_studentList, &condition, FindJohn);
 	if (node != NULL)
 	{
-		p_student = (Student_t *)List_GetNodeData(node);
+		p_student = (Student_t *)List_GetNodeData(g_studentList, node);
 		LOG_A("Find John's information: chineseScore:%d, math:%d, english:%d.\n", p_student->chineseScore, p_student->mathScore, p_student->englishScore);
 	}
 	
@@ -1105,10 +1112,10 @@ static int TestDetach()
 	condition.sex = 'M';
 	condition.age = 11;	
 	LOG_A("Condition: name:%s, sex:'%c', age:%d.\n", condition.name, condition.sex, condition.age);	
-	node = List_GetFirstMatchNode(g_studentList, &condition, FindJohn);
+	node = List_GetFirstMatchNodeByCond(g_studentList, &condition, FindJohn);
 	if (node != NULL)
 	{
-		p_student = (Student_t *)List_GetNodeData(node);
+		p_student = (Student_t *)List_GetNodeData(g_studentList, node);
 
 		List_DetachNode(g_studentList, node);	
 		LOG_A("After detach stduent(Name:%s, sex:'%c', age:%d) from student list.\n", p_student->p_name, p_student->sex, p_student->age);
@@ -1117,27 +1124,27 @@ static int TestDetach()
 	}		
 	
 	node = List_DetachNodeAtPos(g_studentList, 1);
-	p_student = (Student_t*)List_DetachNodeData(node);
+	p_student = (Student_t*)List_DetachNodeData(g_studentList, node);
 	List_DestroyNode(g_studentList, node);	
 	LOG_A("After detach stduent(Name:%s, sex:'%c', age:%d) from student list at position 1.\n", p_student->p_name, p_student->sex, p_student->age);
 	FreeStudentData(p_student);
 	ShowStudentList(g_studentList);		
 	
 	char sex = 'M';
-	p_student = List_DetachData(g_studentList, &sex, FindBySex);
+	p_student = List_DetachDataByCond(g_studentList, &sex, FindBySex);
 	LOG_A("After detach first 'M', name:%s, age:%d.\n", p_student->p_name, p_student->age);	
 	ShowStudentList(g_studentList);	
 	FreeStudentData(p_student);
 	
 	node = List_DetachHead(g_studentList);
-	p_student = List_GetNodeData(node);
+	p_student = List_GetNodeData(g_studentList, node);
 	LOG_A("Detach head:%s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
 	List_DestroyNode(g_studentList, node);	
 	LOG_A("After detach head.\n");	
 	ShowStudentList(g_studentList);	
 
 	node = List_DetachTail(g_studentList);
-	p_student = List_GetNodeData(node);
+	p_student = List_GetNodeData(g_studentList, node);
 	LOG_A("Detach tail:%s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
 	List_DestroyNode(g_studentList, node);	
 	LOG_A("After detach tail.\n");	
@@ -1161,10 +1168,10 @@ static int TestRm()
 	condition.sex = 'M';
 	condition.age = 11;	
 	LOG_A("Condition: name:%s, sex:'%c', age:%d.\n", condition.name, condition.sex, condition.age);	
-	node = List_GetFirstMatchNode(g_studentList, &condition, FindJohn);
+	node = List_GetFirstMatchNodeByCond(g_studentList, &condition, FindJohn);
 	if (node != NULL)
 	{
-		p_student = (Student_t *)List_GetNodeData(node);
+		p_student = (Student_t *)List_GetNodeData(g_studentList, node);
 		LOG_A("After rm stduent(Name:%s, sex:'%c', age:%d) from student list.\n", p_student->p_name, p_student->sex, p_student->age);
 		
 		List_RmNode(g_studentList, node);			
@@ -1185,7 +1192,7 @@ static int TestRm()
 	ShowStudentList(g_studentList);	
 	
 	char sex = 'M';
-	List_RmFirstMatchNode(g_studentList, &sex, FindBySex);
+	List_RmFirstMatchNodeByCond(g_studentList, &sex, FindBySex);
 	LOG_A("After rm firt match sex 'M':\n");
 	ShowStudentList(g_studentList);		
 	

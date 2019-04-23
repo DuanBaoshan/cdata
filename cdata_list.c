@@ -274,7 +274,7 @@ int List_Clear(List_t list)
 	List_Lock(list);
 	while (p_head != NULL)
 	{
-		p_next = List_GetNextNode(list, p_head);
+		p_next = List_GetNextNodeNL(list, p_head);
 		List_DestroyNode(p_list, p_head);
 		p_head = p_next;
 	}
