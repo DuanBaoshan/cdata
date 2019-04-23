@@ -88,7 +88,7 @@ static int InitList()
         LOG_E("Fail to create normal list.\n");
         return -1;
     }
-	List_SetUserLtNodeFunc(g_studentList, IntLtListData);
+	List_SetUserLtNodeFunc(g_normalList, IntLtListData);
 	
 	
     ret = List_CreateRef("StudentList", LIST_TYPE_DOUBLE_LINK, &g_studentList);
