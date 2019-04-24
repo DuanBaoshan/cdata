@@ -70,7 +70,7 @@ static void        SwapNeighbour(List_st *p_list, DBListNode_st *p_firstNode, DB
 
 /*=============================================================================*
  *                    Outer function implemention
- *============================================================================*/ 
+ *============================================================================*/
 int DBList_CreateNode(List_t list, void* p_data, ListNode_t *p_node)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
@@ -159,9 +159,9 @@ int   DBList_InsertNodeAscently(List_t list, ListNode_t node)
     CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
 
     List_st*        p_list    = CONVERT_2_LIST(list);
-    DBListNode_st*  p_newNode = CONVERT_2_DBLIST_NODE(node);	
+    DBListNode_st*  p_newNode = CONVERT_2_DBLIST_NODE(node);
 	DBListNode_st*  p_node    = NULL;
-	
+
     for (p_node = p_list->p_head; p_node != NULL; p_node = p_node->p_next)
     {
         if (p_list->usrLtNodeFn(p_node->p_data, p_newNode->p_data))
@@ -172,7 +172,7 @@ int   DBList_InsertNodeAscently(List_t list, ListNode_t node)
     }
 
     Insert2Tail(p_list, p_newNode);
-	
+
     return ERR_OK;
 }
 
@@ -182,7 +182,7 @@ int   DBList_InsertNodeDescently(List_t list, ListNode_t node)
     CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
 
     List_st*        p_list    = CONVERT_2_LIST(list);
-    DBListNode_st*  p_newNode = CONVERT_2_DBLIST_NODE(node);	
+    DBListNode_st*  p_newNode = CONVERT_2_DBLIST_NODE(node);
 	DBListNode_st*  p_node    = NULL;
 
     for (p_node = p_list->p_head; p_node != NULL; p_node = p_node->p_next)
@@ -194,8 +194,8 @@ int   DBList_InsertNodeDescently(List_t list, ListNode_t node)
         }
     }
 
-    Insert2Tail(p_list, p_newNode);	
-	
+    Insert2Tail(p_list, p_newNode);
+
     return ERR_OK;
 }
 
@@ -204,14 +204,14 @@ int DBList_InsertNodeBefore(List_t list, ListNode_t listNode, ListNode_t newNode
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(listNode != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(newNode != NULL, ERR_BAD_PARAM);
-	
+
     List_st*      p_list      = CONVERT_2_LIST(list);
     DBListNode_st*  p_listNode   = CONVERT_2_DBLIST_NODE(listNode);
 	DBListNode_st*  p_newNode   = CONVERT_2_DBLIST_NODE(newNode);
-	
+
 	InsertBefore(p_list, p_listNode, p_newNode);
-	 
-	return ERR_OK;	
+
+	return ERR_OK;
 }
 
 int DBList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode)
@@ -219,15 +219,15 @@ int DBList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode)
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(listNode != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(newNode != NULL, ERR_BAD_PARAM);
-	
+
     List_st*      p_list      = CONVERT_2_LIST(list);
     DBListNode_st*  p_listNode   = CONVERT_2_DBLIST_NODE(listNode);
-	DBListNode_st*  p_newNode   = CONVERT_2_DBLIST_NODE(newNode);	
-	
+	DBListNode_st*  p_newNode   = CONVERT_2_DBLIST_NODE(newNode);
+
 	p_newNode->p_next = p_listNode->p_next;
-	p_newNode->p_pre = p_listNode;	
+	p_newNode->p_pre = p_listNode;
 	p_listNode->p_next = p_newNode;
-	
+
 	if (p_newNode->p_next == NULL)
 	{
 		p_list->p_tail = p_newNode;
@@ -238,8 +238,8 @@ int DBList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode)
 	}
 
     p_list->nodeCount++;
-	 
-	return ERR_OK;		
+
+	return ERR_OK;
 }
 
 int DBList_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode)
@@ -258,7 +258,7 @@ int DBList_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode)
 
     DBListNode_st* p_secondPreNode  = p_second->p_pre;
     DBListNode_st* p_secondNextNode = p_second->p_next;
-	
+
     if (firstNode == secondNode)
     {
         return ERR_OK;
@@ -269,7 +269,7 @@ int DBList_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode)
         SwapNeighbour(p_list, p_first, p_second);
         return ERR_OK;
     }
-	
+
     p_first->p_next = p_secondNextNode;
     p_first->p_pre = p_secondPreNode;
 
@@ -295,7 +295,7 @@ int DBList_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode)
     {
         p_firstNextNode->p_pre = p_second;
     }
-	
+
     //secondNode is head
     if (p_secondPreNode == NULL)
     {
@@ -315,7 +315,7 @@ int DBList_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode)
     {
         p_secondNextNode->p_pre = p_first;
     }
-	
+
     return ERR_OK;
 }
 
@@ -326,7 +326,9 @@ int DBList_DetachNode(List_t list, ListNode_t node)
 
     List_st *       p_list = CONVERT_2_LIST(list);
     DBListNode_st * p_node = CONVERT_2_DBLIST_NODE(node);
-	
+
+	LOG_A("Enter.\n");
+
     if (0 == p_list->nodeCount)
     {
         return ERR_OK;
@@ -334,14 +336,16 @@ int DBList_DetachNode(List_t list, ListNode_t node)
 
     if (p_node == p_list->p_head)
     {
+		LOG_A("Detach head.\n");
         p_list->p_head = p_node->p_next;
         if (p_list->p_head != NULL)
         {
-            ((DBListNode_st*)p_list->p_head)->p_pre= NULL;
+            ((DBListNode_st*)p_list->p_head)->p_pre = NULL;
         }
     }
     else if (p_node == p_list->p_tail)
     {
+		LOG_A("Detach tail.\n");
         p_list->p_tail = p_node->p_pre;
         if (p_list->p_tail != NULL)
         {
@@ -350,6 +354,7 @@ int DBList_DetachNode(List_t list, ListNode_t node)
     }
     else
     {
+		LOG_A("Detach other.\n");
         if (p_node->p_pre != NULL)
         {
             p_node->p_pre->p_next = p_node->p_next;
@@ -362,7 +367,7 @@ int DBList_DetachNode(List_t list, ListNode_t node)
     }
 
     p_list->nodeCount--;
-	
+
     return ERR_OK;
 }
 /*=============================================================================*
@@ -373,12 +378,12 @@ static void InsertBefore(List_st* p_list, DBListNode_st* p_listNode, DBListNode_
     ASSERT(p_list != NULL);
     ASSERT(p_listNode != NULL);
     ASSERT(p_newNode != NULL);
-	
+
 	p_newNode->p_pre = p_listNode->p_pre;
-	
+
 	p_listNode->p_pre = p_newNode;
 	p_newNode->p_next = p_listNode;
-	
+
 	if (p_newNode->p_pre == NULL)
 	{
 		p_list->p_head = p_newNode;
@@ -387,7 +392,7 @@ static void InsertBefore(List_st* p_list, DBListNode_st* p_listNode, DBListNode_
 	{
 		p_newNode->p_pre->p_next = p_newNode;
 	}
-	
+
     p_list->nodeCount++;
 
     return;
@@ -434,16 +439,16 @@ static CdataBool IsNeighbour(DBListNode_st *p_firstNode, DBListNode_st *p_second
 {
     ASSERT(p_firstNode != NULL);
     ASSERT(p_secondNode != NULL);
-	
+
 	return (p_firstNode->p_next == p_secondNode) || (p_firstNode->p_pre == p_secondNode) || (p_secondNode->p_next == p_firstNode) || (p_secondNode->p_pre == p_firstNode);
 }
 
 static void  SwapNeighbour(List_st *p_list, DBListNode_st *p_firstNode, DBListNode_st *p_secondNode)
-{	
+{
     ASSERT(p_list != NULL);
     ASSERT(p_firstNode != NULL);
     ASSERT(p_secondNode != NULL);
-	
+
     DBListNode_st *p_actualFirst = NULL;
     DBListNode_st *p_actualSecond = NULL;
 
