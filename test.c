@@ -29,27 +29,38 @@ typedef struct
 	int englishScore;
 }Student_t;
 
+typedef struct
+{
+	char name[64];
+	char sex;
+	int age;
+}StudentKeyword_t;
+
+static ListType_e g_listType;
 static List_t g_normalList;
 static List_t g_studentList;
 
 static void ShowAllTestcases();
 static void RunTestcase(int id);
 
-static int InitList();
+static int InitList(ListType_e listType);
 static int DestroyList();
 
+static int ChangeListType();
 
 static void FreeStudentData(void* p_data);
-CdataBool TotalScoreDescent(void* p_listNodeData, void* p_userData);
+CdataBool SortedByTotalScore(void* p_listNodeData, void* p_userData);
+CdataBool StudentIsEqual(void* p_listNodeData, void* p_userData);
+CdataBool StudentIsDuplicate(void* p_firstNodeData, void* p_secondNodeData);
+
+
 
 CdataBool IntLtListData(void* p_nodeData, void* p_userData);
 static int TestNormalList();
 static int TestInsertDataAtPos();
 static int TestStopTraverseNormalData();
 static int TestSwapPos();
-static int TestSwapHeadTail();
-static int TestSwapNeighbour();
-static int TestSwapNeighbourHeadTail();
+static int TestInsertUniquely();
 
 static int TestNormalStructureList();
 static int TestReferenceList();
@@ -62,14 +73,13 @@ static int TestMultiThreadLock();
 
 static Testcase_t g_testcaseArray[] =
 {
+    {"Change list type.", ChangeListType},
     {"Test value copy list.", TestNormalList},
 	{"Test insert normal data at position.", TestInsertDataAtPos},
     {"Test stop traverse in a normal data list.", TestStopTraverseNormalData},
 	{"Test swap two nodes' position.", TestSwapPos},
-	{"Test swap the position of head and tail.", TestSwapHeadTail},
-	{"Test swap the position of two neighbour nodes.", TestSwapNeighbour},
-	{"Test swap the position of two neighbour nodes which are head and tail.", TestSwapNeighbourHeadTail},
-	{"Test value copy structure list.", TestNormalStructureList},
+    {"Test insert data uniquely.", TestInsertUniquely},
+    {"Test normal structure list.", TestNormalStructureList},
 	{"Test reference value list.", TestReferenceList},
 	{"Test detach node from list.", TestDetach},
 	{"Test rm node from list.", TestRm},
@@ -78,11 +88,25 @@ static Testcase_t g_testcaseArray[] =
 	{"Test multi thread with List_Lock", TestMultiThreadLock},
 };
 
-static int InitList()
+static int InitList(ListType_e listType)
 {
     int ret = ERR_OK;
 
-    ret = List_Create("NormalDataList", LIST_TYPE_DOUBLE_LINK, sizeof(int), &g_normalList);
+    if (LIST_TYPE_SINGLE_LINK == listType)
+    {
+        LOG_A("Init Single Link list.\n");
+    }
+    else if (LIST_TYPE_DOUBLE_LINK == listType)
+    {
+        LOG_A("Init Double Link list.\n");
+    }
+    else
+    {
+        LOG_E("Invalid list type:%d.\n", listType);
+        return -1;
+    }
+
+    ret = List_Create("NormalDataList", listType, sizeof(int), &g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to create normal list.\n");
@@ -91,7 +115,7 @@ static int InitList()
 	List_SetUserLtNodeFunc(g_normalList, IntLtListData);
 
 
-    ret = List_CreateRef("StudentList", LIST_TYPE_DOUBLE_LINK, &g_studentList);
+    ret = List_CreateRef("StudentList", listType, &g_studentList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to create normal list.\n");
@@ -99,7 +123,9 @@ static int InitList()
     }
 
 	List_SetFreeDataFunc(g_studentList, FreeStudentData);
-	List_SetUserLtNodeFunc(g_studentList, TotalScoreDescent);
+	List_SetUserLtNodeFunc(g_studentList, SortedByTotalScore);
+    List_SetEqualFunc(g_studentList, StudentIsEqual);
+    List_SetDuplicateFunc(g_studentList, StudentIsDuplicate);
 
 	return 0;
 }
@@ -125,14 +151,35 @@ static int DestroyList()
 	return 0;
 }
 
+static int ChangeListType()
+{
+    if (g_listType == LIST_TYPE_DOUBLE_LINK)
+    {
+        LOG_A("Change list type from Double link to Single link.\n");
+        g_listType = LIST_TYPE_SINGLE_LINK;
+    }
+    else
+    {
+        LOG_A("Change list type from Single link to Double link.\n");
+        g_listType = LIST_TYPE_DOUBLE_LINK;
+    }
+
+    DestroyList();
+    InitList(g_listType);
+
+    return 0;
+}
+
+
 int main(int argc, char* argv[])
 {
-    LOG_A("Hello dblist.\n");
+    LOG_A("Hello cdata list.\n");
 
     int id = 0;
     char choice[128];
 
-	InitList();
+    g_listType = LIST_TYPE_DOUBLE_LINK;
+	InitList(g_listType);
 
     while (1)
     {
@@ -224,7 +271,7 @@ static int ShowIntListReversely(List_t list)
 
 static int TestNormalList()
 {
-    printf("\n==>I will test normal data.\n");
+    LOG_A("I will test normal data.\n");
 
 	int *p_data = NULL;
     int i = 0;
@@ -237,9 +284,10 @@ static int TestNormalList()
         value = i + 1;
         List_InsertData(g_normalList, &value);
     }
-    printf("\n==>After inster data:\n");
+    LOG_A("After inster data:\n");
 	ShowIntList(g_normalList);
-	printf("\n==>Show int list reversely:\n");
+
+	LOG_A("Show int list reversely:\n");
     ShowIntListReversely(g_normalList);
 
 	p_data = (int*)List_GetDataAtPos(g_normalList, 0);
@@ -249,13 +297,13 @@ static int TestNormalList()
 		return -1;
 	}
 
-	printf("Get data:%d at position 0.\n", *p_data);
+	LOG_A("Get data:%d at position 0.\n", *p_data);
     List_Clear(g_normalList);
-    printf("After clear, list count:%d.\n", (int)List_Count(g_normalList));
+    LOG_A("After clear, list count:%d.\n", (int)List_Count(g_normalList));
 
 	//Test List_InsertData2Head
+	LOG_A("Will insert data to head.\n");
 	count = 10;
-    LOG_A("count:%d.\n", count);
     for (i = 0; i < count; i++)
     {
         value = i + 1;
@@ -265,9 +313,8 @@ static int TestNormalList()
 	List_Clear(g_normalList);
 
 	//Test List_InsertDataAscently
-    printf("\n==>I will test inserting normal data ascently.\n");
+    LOG_A("Will test inserting normal data ascently.\n");
 	count = 10;
-    LOG_A("count:%d.\n", count);
     for (i = 0; i < count; i++)
     {
         value = i + 1;
@@ -277,9 +324,8 @@ static int TestNormalList()
 	List_Clear(g_normalList);
 
 	//Test List_InsertDataDescently
-    printf("\n==>I will test inserting normal data descently.\n");
+    LOG_A("Will test inserting normal data descently.\n");
 	count = 10;
-    LOG_A("count:%d.\n", count);
     for (i = 0; i < count; i++)
     {
         value = i + 1;
@@ -410,87 +456,88 @@ static int TestSwapPos()
 	int errRet = 0;
     int ret = ERR_OK;
     int value = 0;
-	ListNode_t node = NULL;
 
-	value = 1;
-	node = List_InsertData(g_normalList, &value);
-	if (node == NULL)
-	{
-	    LOG_E("Fail to insert data.\n");
-        errRet = -1;
-		goto EXIT;
-	}
+	ListNode_t node1 = NULL;
+    ListNode_t node2 = NULL;
+    CdataIndex_t pos1 = 0;
+    CdataIndex_t pos2 = 0;
 
-	ListNode_t node1;
-	value = 2;
-	ret = List_CreateNode(g_normalList, &value, &node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
+    for (value = 1; value <= 2; value++)
+    {
+    	node1 = List_InsertData(g_normalList, &value);
+    	if (node1 == NULL)
+    	{
+    	    LOG_E("Fail to insert data.\n");
+            errRet = -1;
+    		goto EXIT;
+    	}
+    }
 
-	ret = List_InsertNode(g_normalList, node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(node1, NULL);
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	value = 3;
-	node = List_InsertData(g_normalList, &value);
-	if (node == NULL)
-	{
-	    LOG_E("Fail to insert data.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	ListNode_t node2;
-	value = 4;
-	ret = List_CreateNode(g_normalList, &value, &node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-
-	ret = List_InsertNode(g_normalList, node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(g_normalList, node2);
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-
-	value = 5;
-	node = List_InsertData(g_normalList, &value);
-	if (node == NULL)
-	{
-	    LOG_E("Fail to insert data.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-
-	LOG_A("Before swap position.\n");
+    LOG_A("List only has two nodes:\n");
 	ShowIntList(g_normalList);
 
-	List_SwapPos(g_normalList, node2, node1);
+    //Switch head and tail
+    node1 = List_GetHead(g_normalList);
+    node2 = List_GetTail(g_normalList);
+    List_SwapPos(g_normalList, node1, node2);
+    LOG_A("After switch head and tail:\n");
+	ShowIntList(g_normalList);
 
-	LOG_A("After swap position.\n");
+    //Has many nodes
+    List_Clear(g_normalList);
+    for (value = 1; value <= 10; value++)
+    {
+    	node1 = List_InsertData(g_normalList, &value);
+    	if (node1 == NULL)
+    	{
+    	    LOG_E("Fail to insert data.\n");
+            errRet = -1;
+    		goto EXIT;
+    	}
+    }
+
+    LOG_A("List has many nodes:\n");
+	ShowIntList(g_normalList);
+
+    //Switch head and tail
+    node1 = List_GetHead(g_normalList);
+    node2 = List_GetTail(g_normalList);
+    List_SwapPos(g_normalList, node1, node2);
+    LOG_A("After switch head and tial:\n");
+	ShowIntList(g_normalList);
+
+    //Switch head and other node
+    pos1 = 3;
+    node1 = List_GetHead(g_normalList);
+    node2 = List_GetNodeAtPos(g_normalList, pos1);
+    List_SwapPos(g_normalList, node1, node2);
+    LOG_A("After switch head and pos:%lu:\n", pos1);
+	ShowIntList(g_normalList);
+
+    //Switch tail and other node
+    pos1 = 3;
+    node1 = List_GetTail(g_normalList);
+    node2 = List_GetNodeAtPos(g_normalList, pos1);
+    List_SwapPos(g_normalList, node1, node2);
+    LOG_A("After switch tail and pos:%lu:\n", pos1);
+	ShowIntList(g_normalList);
+
+    //Switch neighbour
+    pos1 = 4;
+    pos2 = pos1 + 1;
+    node1 = List_GetNodeAtPos(g_normalList, pos1);
+    node2 = List_GetNodeAtPos(g_normalList, pos2);
+    List_SwapPos(g_normalList, node1, node2);
+    LOG_A("After switch neighbour, pos1:%lu and pos2:%lu:\n", pos1, pos2);
+	ShowIntList(g_normalList);
+
+    //Switch two normal nodes
+    pos1 = 4;
+    pos2 = pos1 + 3;
+    node1 = List_GetNodeAtPos(g_normalList, pos1);
+    node2 = List_GetNodeAtPos(g_normalList, pos2);
+    List_SwapPos(g_normalList, node1, node2);
+    LOG_A("After switch two normal nodes, pos1:%lu and pos2:%lu:\n", pos1, pos2);
 	ShowIntList(g_normalList);
 
 	errRet = 0;
@@ -499,259 +546,9 @@ static int TestSwapPos()
     ret = List_Clear(g_normalList);
     if (ret != ERR_OK)
     {
-        LOG_E("Fail to destroy list.\n");
+        LOG_E("Fail to clear list.\n");
         errRet = -1;
     }
-
-	return errRet;
-}
-
-static int TestSwapHeadTail()
-{
-	int errRet = 0;
-    int ret = ERR_OK;
-    int value = 0;
-	ListNode_t node = NULL;
-
-	ListNode_t node1;
-	value = 1;
-	ret = List_CreateNode(g_normalList, &value, &node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	ret = List_InsertNode(g_normalList, node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(node1, NULL);
-        errRet = -1;
-		goto EXIT;
-	}
-
-	value = 2;
-	node = List_InsertData(g_normalList, &value);
-	if (node == NULL)
-	{
-	    LOG_E("Fail to insert data.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	value = 3;
-	node = List_InsertData(g_normalList, &value);
-	if (node == NULL)
-	{
-	    LOG_E("Fail to insert data.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-
-	ListNode_t node2;
-	value = 4;
-	ret = List_CreateNode(g_normalList, &value, &node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-
-	ret = List_InsertNode(g_normalList, node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(node2, NULL);
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-
-	LOG_A("Before swap position.\n");
-	ShowIntList(g_normalList);
-
-	List_SwapPos(g_normalList, node2, node1);
-
-	LOG_A("After swap position.\n");
-	ShowIntList(g_normalList);
-
-	errRet = 0;
-
-	EXIT:
-    ret = List_Clear(g_normalList);
-    if (ret != ERR_OK)
-    {
-        LOG_E("Fail to destroy list.\n");
-        errRet = -1;
-    }
-
-	return errRet;
-}
-
-static int TestSwapNeighbour()
-{
-	int errRet = 0;
-
-    int ret = ERR_OK;
-    int value = 0;
-	ListNode_t node = NULL;
-
-	value = 1;
-	node = List_InsertData(g_normalList, &value);
-	if (node == NULL)
-	{
-	    LOG_E("Fail to insert data.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-
-	ListNode_t node1;
-	value = 2;
-	ret = List_CreateNode(g_normalList, &value, &node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	ret = List_InsertNode(g_normalList, node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(node1, NULL);
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	ListNode_t node2;
-	value = 3;
-	ret = List_CreateNode(g_normalList, &value, &node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-
-	ret = List_InsertNode(g_normalList, node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(node2, NULL);
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	value = 4;
-	node = List_InsertData(g_normalList, &value);
-	if (node == NULL)
-	{
-	    LOG_E("Fail to insert data.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-
-	LOG_A("Before swap position.\n");
-	ShowIntList(g_normalList);
-
-	List_SwapPos(g_normalList, node2, node1);
-
-	LOG_A("After swap position.\n");
-	ShowIntList(g_normalList);
-
-	errRet = 0;
-
-	EXIT:
-    ret = List_Clear(g_normalList);
-    if (ret != ERR_OK)
-    {
-        LOG_E("Fail to destroy list.\n");
-        errRet = -1;
-    }
-
-	return errRet;
-}
-
-static int TestSwapNeighbourHeadTail()
-{
-	int errRet = 0;
-
-    int ret = ERR_OK;
-    int value = 0;
-
-	ListNode_t node1;
-	value = 1;
-	ret = List_CreateNode(g_normalList, &value, &node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	ret = List_InsertNode(g_normalList, node1);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(node1, NULL);
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	ListNode_t node2;
-	value = 2;
-	ret = List_CreateNode(g_normalList, &value, &node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to create node.\n");
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-
-	ret = List_InsertNode(g_normalList, node2);
-	if (ret != ERR_OK)
-	{
-	    LOG_E("Fail to insert node.\n");
-
-		List_DestroyNode(g_normalList, node2);
-        errRet = -1;
-		goto EXIT;
-	}
-	LOG_A("node2:%p, next:%p, pre:%p.\n", node2, List_GetNextNode(g_normalList, node2), List_GetPreNode(g_normalList, node2));
-	LOG_A("node1:%p, next:%p, pre:%p.\n", node1, List_GetNextNode(g_normalList, node1), List_GetPreNode(g_normalList, node1));
-
-	LOG_A("Before swap position.\n");
-	ShowIntList(g_normalList);
-
-	List_SwapPos(g_normalList, node1, node2);
-
-	LOG_A("After swap position.\n");
-	ShowIntList(g_normalList);
-
-	errRet = 0;
-
-	EXIT:
-	List_Clear(g_normalList);
 
 	return errRet;
 }
@@ -870,7 +667,7 @@ static int ShowStudentList(List_t list)
 	return 0;
 }
 
-CdataBool TotalScoreDescent(void* p_listNodeData, void* p_userData)
+CdataBool SortedByTotalScore(void* p_listNodeData, void* p_userData)
 {
 	Student_t *p_data = (Student_t *)p_userData;
 	Student_t *p_nodeData = (Student_t *)p_listNodeData;
@@ -880,6 +677,57 @@ CdataBool TotalScoreDescent(void* p_listNodeData, void* p_userData)
 
 	return total1 < total2;
 }
+
+CdataBool StudentIsEqual(void* p_listNodeData, void* p_userData)
+{
+    if (p_listNodeData == NULL)
+    {
+        LOG_E("List node data is NULL.\n");
+        return CDATA_FALSE;
+    }
+
+    if (p_userData == NULL)
+    {
+        LOG_E("User data is NULL.\n");
+        return CDATA_FALSE;
+    }
+
+    Student_t*        p_student = (Student_t*)p_listNodeData;
+    StudentKeyword_t* p_keyword = (StudentKeyword_t*)p_userData;
+
+    return ((strcmp(p_student->p_name, p_keyword->name) == 0)
+             && (p_student->age == p_keyword->age)
+             && (p_student->sex == p_keyword->sex)
+            );
+
+}
+
+CdataBool StudentIsDuplicate(void* p_firstNodeData, void* p_secondNodeData)
+{
+    if (p_firstNodeData == NULL)
+    {
+        LOG_E("First list node data is NULL.\n");
+        return CDATA_FALSE;
+    }
+
+    if (p_secondNodeData == NULL)
+    {
+        LOG_E("Second list node data is NULL.\n");
+        return CDATA_FALSE;
+    }
+
+    Student_t* p_first = (Student_t*)p_firstNodeData;
+    Student_t* p_second = (Student_t*)p_secondNodeData;
+
+    return ((strcmp(p_first->p_name, p_second->p_name) == 0)
+             && (p_first->age == p_second->age)
+             && (p_first->sex == p_second->sex)
+            );
+
+
+
+}
+
 static int CreateStudentList()
 {
 	List_Clear(g_studentList);
@@ -911,6 +759,46 @@ static int CreateStudentList()
 
 	return 0;
 }
+
+
+static int TestInsertUniquely()
+{
+    Student_t *p_student = NULL;
+
+	CreateStudentList();
+	ShowStudentList(g_studentList);
+
+    p_student = CreateStudent("Jack", 'M', 10, 80, 87, 90);
+    if (List_InsertDataUniquely(g_studentList, p_student) == NULL)
+    {
+        LOG_A("Fail to insert student:'%s', sex:'%c', age:%d, perhaps already exists.\n", p_student->p_name, p_student->sex, p_student->age);
+        FreeStudentData(p_student);
+    }
+
+    p_student = CreateStudent("JackChen", 'M', 10, 80, 87, 90);
+    if (List_InsertDataUniquely(g_studentList, p_student) != NULL)
+    {
+        LOG_A("Succeed to insert student:'%s', sex:'%c', age:%d.\n", p_student->p_name, p_student->sex, p_student->age);
+        ShowStudentList(g_studentList);
+    }
+
+    p_student = CreateStudent("JackChen", 'M', 10, 80, 87, 90);
+    if (List_InsertData2HeadUniquely(g_studentList, p_student) == NULL)
+    {
+        LOG_A("Fail to insert student to head,'%s', sex:'%c', age:%d, perhaps already exists.\n", p_student->p_name, p_student->sex, p_student->age);
+        FreeStudentData(p_student);
+    }
+
+    p_student = CreateStudent("JaneYang", 'F', 12, 90, 87, 90);
+    if (List_InsertData2HeadUniquely(g_studentList, p_student) != NULL)
+    {
+        LOG_A("Succeed to insert student to head, '%s', sex:'%c', age:%d.\n", p_student->p_name, p_student->sex, p_student->age);
+        ShowStudentList(g_studentList);
+    }
+
+    return 0;
+}
+
 
 typedef struct
 {

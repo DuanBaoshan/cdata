@@ -430,6 +430,8 @@ ListNode_t List_InsertDataUniquely(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
+
+        List_DetachNodeData(list, node);
 		List_DestroyNode(list, node);
 		return NULL;
 	}
@@ -456,6 +458,8 @@ ListNode_t List_InsertData2HeadUniquely(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
+
+        List_DetachNodeData(list, node);
 		List_DestroyNode(list, node);
 		return NULL;
 	}
