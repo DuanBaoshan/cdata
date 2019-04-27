@@ -584,7 +584,7 @@ CdataBool List_DataExists(List_t list, void* p_userData)
 	if (p_list->equalFn == NULL)
 	{
 		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
-		return ERR_BAD_PARAM;
+		return CDATA_FALSE;
 	}
 
 	List_Lock(list);
@@ -1811,12 +1811,10 @@ int List_DetachNodeNL(List_t list, ListNode_t node)
 
 	if (p_list->type == LIST_TYPE_DOUBLE_LINK)
 	{
-		LOG_A("DBList_DetachNode.\n");
 		return DBList_DetachNode(list, node);
 	}
 	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
-		LOG_A("SGList_DetachNode.\n");
 		return SGList_DetachNode(list, node);
 	}
 	else

@@ -54,11 +54,10 @@ CdataBool StudentIsEqual(void* p_listNodeData, void* p_userData);
 CdataBool StudentIsDuplicate(void* p_firstNodeData, void* p_secondNodeData);
 
 
-
+CdataBool IntEqualListData(void* p_nodeData, void* p_userData);
 CdataBool IntLtListData(void* p_nodeData, void* p_userData);
-static int TestNormalList();
-static int TestInsertDataAtPos();
-static int TestStopTraverseNormalData();
+
+static int TestSimpleList();
 static int TestSwapPos();
 static int TestInsertUniquely();
 
@@ -66,7 +65,9 @@ static int TestNormalStructureList();
 static int TestReferenceList();
 static int TestDetach();
 static int TestRm();
-static int TestMatch();
+
+static int TestMatchByData();
+static int TestMatchByCond();
 
 static int TestMultiThread();
 static int TestMultiThreadLock();
@@ -74,16 +75,15 @@ static int TestMultiThreadLock();
 static Testcase_t g_testcaseArray[] =
 {
     {"Change list type.", ChangeListType},
-    {"Test value copy list.", TestNormalList},
-	{"Test insert normal data at position.", TestInsertDataAtPos},
-    {"Test stop traverse in a normal data list.", TestStopTraverseNormalData},
+    {"Test simple value list.", TestSimpleList},
 	{"Test swap two nodes' position.", TestSwapPos},
     {"Test insert data uniquely.", TestInsertUniquely},
     {"Test normal structure list.", TestNormalStructureList},
 	{"Test reference value list.", TestReferenceList},
 	{"Test detach node from list.", TestDetach},
 	{"Test rm node from list.", TestRm},
-	{"Test match data in list.", TestMatch},
+	{"Test match by data in list.", TestMatchByData},
+	{"Test match by condition in list.", TestMatchByCond},
 	{"Test multi thread.", TestMultiThread},
 	{"Test multi thread with List_Lock", TestMultiThreadLock},
 };
@@ -113,6 +113,7 @@ static int InitList(ListType_e listType)
         return -1;
     }
 	List_SetUserLtNodeFunc(g_normalList, IntLtListData);
+    List_SetEqualFunc(g_normalList, IntEqualListData);
 
 
     ret = List_CreateRef("StudentList", listType, &g_studentList);
@@ -234,6 +235,15 @@ static void RunTestcase(int id)
     }
 }
 
+CdataBool IntEqualListData(void* p_nodeData, void* p_userData)
+{
+    int userData = *(int*)p_userData;
+    int nodeData = *(int*)p_nodeData;
+
+    return userData == nodeData;
+
+}
+
 CdataBool IntLtListData(void* p_nodeData, void* p_userData)
 {
     int userData = *(int*)p_userData;
@@ -269,15 +279,31 @@ static int ShowIntListReversely(List_t list)
 	return 0;
 }
 
-static int TestNormalList()
+static void TraverseStopIntList(ListTraverseNodeInfo_t *p_info, void *p_userData, CdataBool* p_needStop)
 {
-    LOG_A("I will test normal data.\n");
+    int data = *((int *)p_info->p_data);
+    int index = (int)p_info->index;
+    int userData = *((int *)p_userData);
 
-	int *p_data = NULL;
+    printf("data:%d, userData:%d, index:%d.\n", data, userData, index);
+
+    if (data < userData)
+    {
+        printf("\nFind a data(%d) < userData(%d), index is:%d.\n", data, userData, index);
+        *p_needStop = CDATA_TRUE;
+    }
+
+    return;
+}
+
+static int TestSimpleList()
+{
+    LOG_A("I will test simple data list.\n");
+
+	//int *p_data = NULL;
     int i = 0;
     int value = 0;
-    int count = 10;
-
+    CdataCount_t count = 10;
 
     for (i = 0; i < count; i++)
     {
@@ -290,14 +316,7 @@ static int TestNormalList()
 	LOG_A("Show int list reversely:\n");
     ShowIntListReversely(g_normalList);
 
-	p_data = (int*)List_GetDataAtPos(g_normalList, 0);
-	if (p_data == NULL)
-	{
-		LOG_E("Fail to get data.\n");
-		return -1;
-	}
 
-	LOG_A("Get data:%d at position 0.\n", *p_data);
     List_Clear(g_normalList);
     LOG_A("After clear, list count:%d.\n", (int)List_Count(g_normalList));
 
@@ -317,7 +336,7 @@ static int TestNormalList()
 	count = 10;
     for (i = 0; i < count; i++)
     {
-        value = i + 1;
+        value = (random() % 100) + 1;
         List_InsertDataAscently(g_normalList, &value);
     }
 	ShowIntList(g_normalList);
@@ -328,126 +347,58 @@ static int TestNormalList()
 	count = 10;
     for (i = 0; i < count; i++)
     {
-        value = i + 1;
+        value = (random() % 100) + 1;
         List_InsertDataDescently(g_normalList, &value);
     }
     ShowIntList(g_normalList);
-	List_Clear(g_normalList);
-    return 0;
-}
 
-static int TestInsertDataAtPos()
-{
-	int errRet = 0;
-	int ret = ERR_OK;
-
-	int i = 0;
-    int value = 0;
-	ListNode_t node = NULL;
-
-	for (i = 0; i < 5; i++)
-	{
-		value = i + 1;
-		node = List_InsertData(g_normalList, &value);
-		if (node == NULL)
-		{
-			LOG_E("Fail to insert data.\n");
-		}
-	}
-
-	ShowIntList(g_normalList);
-	LOG_A("List count:%d.\n", (int)List_Count(g_normalList));
-
-	value = 100;
-	LOG_A("Wil insert %d at 0.\n", value);
-	node = List_InsertDataAtPos(g_normalList, &value, 0);
-    if (node == NULL)
+    //Test match data
+    LOG_A("Will test data exists.\n");
+	count = 10;
+    for (i = 0; i < count; i++)
     {
-        LOG_E("Fail to insert at position.\n");
-        errRet = -1;
-		goto EXIT;
-    }
-	ShowIntList(g_normalList);
-	LOG_A("List count:%d.\n", (int)List_Count(g_normalList));
-
-	value = 100;
-	LOG_A("Wil insert %d at %d.\n", value, (int)(List_Count(g_normalList) - 1));
-	node = List_InsertDataAtPos(g_normalList, &value, List_Count(g_normalList) - 1);
-    if (node == NULL)
-    {
-        LOG_E("Fail to insert at position.\n");
-        errRet = -1;
-		goto EXIT;
+        value = (random() % 100) + 1;
+        if (value > 50)
+        {
+            value = 3;
+        }
+        List_InsertData(g_normalList, &value);
     }
 
-	ShowIntList(g_normalList);
-
-	value = 100;
-	LOG_A("Wil insert %d at 2.\n", value);
-	node = List_InsertDataAtPos(g_normalList, &value, 2);
-    if (node == NULL)
-    {
-        LOG_E("Fail to insert at position.\n");
-        errRet = -1;
-		goto EXIT;
-    }
-
-	ShowIntList(g_normalList);
-
-	errRet = 0;
-	EXIT:
-	ret = List_Clear(g_normalList);
-    if (ret != ERR_OK)
-    {
-        LOG_E("Fail to destroy list.\n");
-        return -1;
-    }
-
-    return errRet;
-}
-
-static void TraverseStopIntList(ListTraverseNodeInfo_t *p_info, void *p_userData, CdataBool* p_needStop)
-{
-    int data = *((int *)p_info->p_data);
-    int index = (int)p_info->index;
-    int userData = *((int *)p_userData);
-
-    printf("data:%d, userData:%d, index:%d.\n", data, userData, index);
-
-    if (data < userData)
-    {
-        printf("\nFind a data(%d) < userData(%d), index is:%d.\n", data, userData, index);
-        *p_needStop = CDATA_TRUE;
-    }
-
-    return;
-}
-
-static int TestStopTraverseNormalData()
-{
-    printf("\n==>I will test stop traverse in a normal data list.\n");
-
-    int userData = 50;
-	int i = 0;
-	int value = 0;
-
-	for (i = 0; i < 10; i++)
-	{
-		value = random() % 100;
-		List_InsertData(g_normalList, &value);
-	}
-
-    printf("All data in the list:\n");
+    value = 3;
+    List_InsertDataAtPos(g_normalList, &value, 0);
+    List_InsertDataAtPos(g_normalList, &value, 3);
+    List_InsertDataAtPos(g_normalList, &value, List_Count(g_normalList) - 1);
     ShowIntList(g_normalList);
 
-    printf("\nWill find the data which < userData:%d.\n", userData);
-	List_Traverse(g_normalList, &userData, TraverseStopIntList);
+    value = 3;
+    if (List_DataExists(g_normalList, &value))
+    {
+        LOG_A("%d exists.\n", value);
+    }
+    else
+    {
+        LOG_A("%d not exists.\n", value);
+    }
 
-	printf("\nWill find the data which < userData:%d reversely.\n", userData);
-	List_TraverseReversely(g_normalList, &userData, TraverseStopIntList);
+    List_GetMachCount(g_normalList, &value, &count);
+    LOG_A("The count of value(%d) in the list is:%lu.\n", value, count);
 
-    List_Clear(g_normalList);
+    List_RmAllMatchNodes(g_normalList, &value);
+    LOG_A("After rm all value:%d from list.\n", value);
+    ShowIntList(g_normalList);
 
+
+    //Test stop in traverse
+    value = 50;
+    LOG_A("Will find the data which < userData:%d.\n", value);
+	List_Traverse(g_normalList, &value, TraverseStopIntList);
+
+    value = 20;
+	LOG_A("Will find the data which < userData:%d reversely.\n", value);
+	List_TraverseReversely(g_normalList, &value, TraverseStopIntList);
+
+	List_Clear(g_normalList);
     return 0;
 }
 
@@ -730,10 +681,12 @@ CdataBool StudentIsDuplicate(void* p_firstNodeData, void* p_secondNodeData)
 
 static int CreateStudentList()
 {
-	List_Clear(g_studentList);
-	ListNode_t node = NULL;
+    ListNode_t node = NULL;
 
-	node = CreateStudentNode("Jack", 'M', 10, 78, 82, 67);
+	List_Clear(g_studentList);
+
+
+	node = CreateStudentNode("Jack", 'M', 11, 78, 82, 67);
 	List_InsertNodeDescently(g_studentList, node);
 
 	node = CreateStudentNode("Jan", 'F', 10, 90, 96, 80);
@@ -742,7 +695,7 @@ static int CreateStudentList()
 	node = CreateStudentNode("Lily", 'F', 10, 87, 76, 80);
 	List_InsertNodeDescently(g_studentList, node);
 
-	node = CreateStudentNode("Jack", 'M', 11, 89, 93, 78);
+	node = CreateStudentNode("Jack", 'M', 10, 89, 93, 78);
 	List_InsertNodeDescently(g_studentList, node);
 
 	Student_t *p_student = CreateStudent("Alice", 'F', 12, 97, 88, 79);
@@ -1096,35 +1049,144 @@ static int TestRm()
 	return 0;
 }
 
-static int TestMatch()
+static int TestMatchByData()
 {
 	Student_t* p_student = NULL;
 	ListNode_t node = NULL;
+
+	CreateStudentList();
+
+	node = CreateStudentNode("Jack", 'M', 11, 98, 82, 67);
+	List_InsertNodeDescently(g_studentList, node);
+
+	node = CreateStudentNode("Jack", 'M', 11, 73, 67, 76);
+	List_InsertNodeDescently(g_studentList, node);
+	ShowStudentList(g_studentList);
+
+    node = CreateStudentNode("Jack", 'M', 11, 90, 82, 98);
+    if (List_InsertNodeUniquely(g_studentList, node) == ERR_DATA_EXISTS)
+    {
+        LOG_A("Fail to insert node, because there is the same data in list.\n");
+        List_DestroyNode(g_studentList, node);
+    }
+
+    StudentKeyword_t keyword;
+    memset(&keyword, 0, sizeof(StudentKeyword_t));
+    strcpy(keyword.name, "John");
+    keyword.sex = 'M';
+    keyword.age = 11;
+    if (List_DataExists(g_studentList, &keyword))
+    {
+        LOG_A("Student(name:'%s', sex:'%c', age:%d) exists.\n", keyword.name, keyword.sex, keyword.age);
+    }
+
+    memset(&keyword, 0, sizeof(StudentKeyword_t));
+    strcpy(keyword.name, "JackJack");
+    keyword.sex = 'M';
+    keyword.age = 11;
+    if (!List_DataExists(g_studentList, &keyword))
+    {
+        LOG_A("Student(name:'%s', sex:'%c', age:%d) not exists.\n", keyword.name, keyword.sex, keyword.age);
+    }
+
+    CdataCount_t count = 0;
+    memset(&keyword, 0, sizeof(StudentKeyword_t));
+    strcpy(keyword.name, "Jack");
+    keyword.sex = 'M';
+    keyword.age = 11;
+    List_GetMachCount(g_studentList, &keyword, &count);
+    LOG_A("There are %d students with same info(name:%s, sex:'%c', age:%d).\n", (int)count, keyword.name, keyword.sex, keyword.age);
+
+    int i = 0;
+    int totalScore = 0;
+
+    LOG_A("From head to tail:\n");
+    node = List_GetFirstMatchNode(g_studentList, &keyword);
+    while (node != NULL)
+    {
+        p_student = List_GetNodeData(g_studentList, node);
+        totalScore = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
+        LOG_A("Studentname-%d:(name:%s, sex:'%c', age:%d, total:%d, chinese:%d, math:%d, english:%d).\n", i + 1
+                    , p_student->p_name
+                    , p_student->sex
+                    , p_student->age
+                    , totalScore
+                    , p_student->chineseScore
+                    , p_student->mathScore
+                    , p_student->englishScore);
+
+        i++;
+        node = List_GetNextMatchNode(g_studentList, List_GetNextNode(g_studentList, node), &keyword);
+    }
+
+    LOG_A("From tail to head:\n");
+    i = 0;
+    node = List_GetLastMatchNode(g_studentList, &keyword);
+    while (node != NULL)
+    {
+        p_student = List_GetNodeData(g_studentList, node);
+        totalScore = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
+        LOG_A("Studentname-%d:(name:%s, sex:'%c', age:%d, total:%d, chinese:%d, math:%d, english:%d).\n", i + 1
+                    , p_student->p_name
+                    , p_student->sex
+                    , p_student->age
+                    , totalScore
+                    , p_student->chineseScore
+                    , p_student->mathScore
+                    , p_student->englishScore);
+
+        i++;
+        node = List_GetPreMatchNode(g_studentList, List_GetPreNode(g_studentList, node), &keyword);
+    }
+
+    LOG_A("After rm all matched nodes:\n");
+    List_RmAllMatchNodes(g_studentList, &keyword);
+    ShowStudentList(g_studentList);
+
+    return 0;
+}
+
+static int TestMatchByCond()
+{
+	Student_t* p_student = NULL;
+	ListNode_t node = NULL;
+    char sex = 'M';
+    CdataCount_t count = 0;
+
 	CreateStudentList();
 	ShowStudentList(g_studentList);
 
-	LOG_A("Find all 'M' from head to tail.\n");
-	char sex = 'M';
+
+    List_GetMachCountByCond(g_studentList, &sex, FindBySex, &count);
+    LOG_A("There are %d students with sex:'%c'.\n", (int)count, sex);
+
+    sex = 'F';
+    List_GetMachCountByCond(g_studentList, &sex, FindBySex, &count);
+    LOG_A("There are %d students with sex:'%c'.\n", (int)count, sex);
+
+
+    sex = 'M';
+	LOG_A("Find all '%c' from head to tail.\n", sex);
 	for (node = List_GetFirstMatchNodeByCond(g_studentList, &sex, FindBySex); node != NULL;)
 	{
 		p_student = (Student_t*)List_GetNodeData(g_studentList, node);
 		LOG_A("Find %s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
 
-		node = List_GetNextNode(g_studentList, node);
-		node = List_GetNextMatchNodeByCond(g_studentList, node, &sex, FindBySex);
+		node = List_GetNextMatchNodeByCond(g_studentList, List_GetNextNode(g_studentList, node), &sex, FindBySex);
 	}
 
-	LOG_A("Find all 'M' from tail to head.\n");
+	LOG_A("Find all '%c' from tail to head.\n", sex);
 	for (node = List_GetLastMatchNodeByCond(g_studentList, &sex, FindBySex); node != NULL;)
 	{
 		p_student = (Student_t*)List_GetNodeData(g_studentList, node);
 		LOG_A("Find %s, '%c', %d.\n", p_student->p_name, p_student->sex, p_student->age);
 
-		node = List_GetPreNode(g_studentList, node);
-		node = List_GetPreMatchNodeByCond(g_studentList, node, &sex, FindBySex);
+		node = List_GetPreMatchNodeByCond(g_studentList, List_GetPreNode(g_studentList, node), &sex, FindBySex);
 	}
 
-	List_Clear(g_studentList);
+    LOG_A("After rm all matched(sex:'%c') nodes:\n", sex);
+    List_RmAllMatchNodesByCond(g_studentList, &sex, FindBySex);
+    ShowStudentList(g_studentList);
 
 	return 0;
 }

@@ -327,8 +327,6 @@ int DBList_DetachNode(List_t list, ListNode_t node)
     List_st *       p_list = CONVERT_2_LIST(list);
     DBListNode_st * p_node = CONVERT_2_DBLIST_NODE(node);
 
-	LOG_A("Enter.\n");
-
     if (0 == p_list->nodeCount)
     {
         return ERR_OK;
@@ -336,7 +334,6 @@ int DBList_DetachNode(List_t list, ListNode_t node)
 
     if (p_node == p_list->p_head)
     {
-		LOG_A("Detach head.\n");
         p_list->p_head = p_node->p_next;
         if (p_list->p_head != NULL)
         {
@@ -345,7 +342,6 @@ int DBList_DetachNode(List_t list, ListNode_t node)
     }
     else if (p_node == p_list->p_tail)
     {
-		LOG_A("Detach tail.\n");
         p_list->p_tail = p_node->p_pre;
         if (p_list->p_tail != NULL)
         {
@@ -354,7 +350,6 @@ int DBList_DetachNode(List_t list, ListNode_t node)
     }
     else
     {
-		LOG_A("Detach other.\n");
         if (p_node->p_pre != NULL)
         {
             p_node->p_pre->p_next = p_node->p_next;
