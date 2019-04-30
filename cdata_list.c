@@ -54,8 +54,8 @@ Date:2019.4.2
  *                    Inner function declaration
  *============================================================================*/
 static List_t      CreateList(ListName_t name, ListType_e type, List_DataType_e dataType, int dataLength);
-static OSMutex_t*  CreateGuard();
-static void        DeleteGuard(OSMutex_t* p_guard);
+static OSMutex_t   CreateGuard();
+static void        DeleteGuard(OSMutex_t guard);
 static CdataBool   HasDuplicateNode(List_t list, ListNode_t node);
  /*=============================================================================*
  *                    Outer function implemention
@@ -175,7 +175,7 @@ void List_Lock(List_t list)
     }
 
     List_st* p_list = CONVERT_2_LIST(list);
-    if (OS_MutexLock(p_list->p_listGuard) != 0)
+    if (OS_MutexLock(p_list->guard) != 0)
     {
         LOG_E("Fail to lock dblist:'%s'.\n", p_list->name);
     }
@@ -192,7 +192,7 @@ void List_UnLock(List_t list)
     }
 
     List_st* p_list = CONVERT_2_LIST(list);
-    if (OS_MutexUnlock(p_list->p_listGuard) != 0)
+    if (OS_MutexUnlock(p_list->guard) != 0)
     {
         LOG_E("Fail to unlock dblist:'%s'.\n", p_list->name);
     }
@@ -272,7 +272,7 @@ int List_Clear(List_t list)
 	void* 		p_head = p_list->p_head;
 	void* 		p_next = NULL;
 
-	LOG_I("Clear dblist:'%s', nodeCount:%ld.\n", p_list->name, p_list->nodeCount);
+	LOG_I("Clear dblist:'%s', nodeCount:%llu.\n", p_list->name, p_list->nodeCount);
 
 	List_Lock(list);
 	while (p_head != NULL)
@@ -299,7 +299,7 @@ int List_Destory(List_t list)
     LOG_I("Destroy dblist:'%s'.\n", p_list->name);
 
     List_Clear(list);
-    DeleteGuard(p_list->p_listGuard);
+    DeleteGuard(p_list->guard);
     OS_Free(p_list);
 
     return ERR_OK;
@@ -954,7 +954,7 @@ void* List_DetachDataAtPos(List_t list, CdataIndex_t posIndex)
 	node = List_DetachNodeAtPos(list, posIndex);
 	if (node == NULL)
 	{
-		LOG_E("Fail to detach node at pos:%lu.\n", posIndex);
+		LOG_E("Fail to detach node at pos:%llu.\n", posIndex);
 		return NULL;
 	}
 	p_data = List_DetachNodeData(list, node);
@@ -1774,16 +1774,34 @@ int List_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode)
     CHECK_PARAM(secondNode != NULL, ERR_BAD_PARAM);
 
 	List_st* p_list = CONVERT_2_LIST(list);
-	int      ret    = ERR_FAIL;
-
-	if (p_list->type == LIST_TYPE_SINGLE_LINK)
-	{
-		LOG_E("Cannot swap node on a single link list.\n");
-		return ERR_BAD_PARAM;
-	}
+	int      ret    = ERR_OK;
 
 	List_Lock(list);
-	ret = DBList_SwapPos(list, firstNode, secondNode);
+	if (p_list->type == LIST_TYPE_SINGLE_LINK)
+	{
+        SGListNode_st* p_firstNode = (SGListNode_st*)firstNode;
+        SGListNode_st* p_secondNode = (SGListNode_st*)secondNode;
+        void *p_data = NULL;
+
+        p_data = p_secondNode->p_data;
+        p_secondNode->p_data = p_firstNode->p_data;
+        p_firstNode->p_data = p_data;
+	}
+    else if (p_list->type == LIST_TYPE_DOUBLE_LINK)
+    {
+        DBListNode_st* p_firstNode = (DBListNode_st*)firstNode;
+        DBListNode_st* p_secondNode = (DBListNode_st*)secondNode;
+        void *p_data = NULL;
+
+        p_data = p_secondNode->p_data;
+        p_secondNode->p_data = p_firstNode->p_data;
+        p_firstNode->p_data = p_data;
+    }
+    else
+    {
+        LOG_E("Wrong list type:%d.\n", p_list->type);
+        ret = ERR_BAD_PARAM;
+    }
 	List_UnLock(list);
 
 	return ret;
@@ -2268,15 +2286,15 @@ CdataCount_t List_RmAllMatchNodesByCond(List_t list, void* p_userData, ListCondi
  *============================================================================*/
 List_t  CreateList(ListName_t name, ListType_e type, List_DataType_e dataType, int dataLength)
 {
-    OSMutex_t* p_listGuard = NULL;
+    OSMutex_t* guard = NULL;
     List_st* p_newList = NULL;
 
     size_t minNameLen = 0;
     size_t nameLen = 0;
     size_t maxLen = 0;
 
-    p_listGuard = CreateGuard();
-    if (p_listGuard == NULL)
+    guard = CreateGuard();
+    if (guard == NULL)
     {
         LOG_E("Fail to create list guard.\n");
         return NULL;
@@ -2287,7 +2305,7 @@ List_t  CreateList(ListName_t name, ListType_e type, List_DataType_e dataType, i
     {
         LOG_E("Have no enough memory.\n");
 
-        DeleteGuard(p_listGuard);
+        DeleteGuard(guard);
         return NULL;
     }
     memset(p_newList, 0x0, sizeof(List_st));
@@ -2307,7 +2325,7 @@ List_t  CreateList(ListName_t name, ListType_e type, List_DataType_e dataType, i
     p_newList->dataLength  = dataLength;
 
     p_newList->nodeCount    = 0;
-    p_newList->p_listGuard  = p_listGuard;
+    p_newList->guard  = guard;
 
 	p_newList->freeFn = NULL;
 	p_newList->equalFn = NULL;
@@ -2317,23 +2335,23 @@ List_t  CreateList(ListName_t name, ListType_e type, List_DataType_e dataType, i
     return p_newList;
 }
 
-static OSMutex_t*  CreateGuard()
+static OSMutex_t  CreateGuard()
 {
-    OSMutex_t* p_mutex = OS_CreateMutex();
-    if(p_mutex == NULL)
+    OSMutex_t mutex = OS_MutexCreate();
+    if(mutex == NULL)
     {
         LOG_E("Fail to create a mutex!\n");
         return NULL;
     }
 
-    return p_mutex;
+    return mutex;
 }
 
-static void DeleteGuard(OSMutex_t* p_guard)
+static void DeleteGuard(OSMutex_t guard)
 {
-    ASSERT(p_guard != NULL);
+    ASSERT(guard != NULL);
 
-    OS_DestroyMutex(p_guard);
+    OS_MutexDestroy(guard);
 }
 
 static CdataBool   HasDuplicateNode(List_t list, ListNode_t node)

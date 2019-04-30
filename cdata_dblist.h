@@ -33,7 +33,7 @@ Date:2019.3.28
 
 #include "cdata_types.h"
 
-__BEGIN_EXTERN_C_DECLS__
+__BEGIN_EXTERN_C_DECL__
 
 int DBList_CreateNode(List_t list, void* p_data, ListNode_t* p_node);
 
@@ -46,10 +46,8 @@ int DBList_InsertNodeDescently(List_t list, ListNode_t node);
 int DBList_InsertNodeBefore(List_t list, ListNode_t listNode, ListNode_t newNode);
 int DBList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode);
 
-int DBList_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode);
-
 int DBList_DetachNode(List_t list, ListNode_t node);
 
-__END_EXTERN_C_DECLS__
+__END_EXTERN_C_DECL__
 
 #endif /* _CDATA_DBLIST_H_ */

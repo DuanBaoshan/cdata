@@ -34,7 +34,7 @@ Date:2019.4.2
 #include "cdata_types.h"
 #include "cdata_os_adapter.h"
 
-__BEGIN_EXTERN_C_DECLS__
+__BEGIN_EXTERN_C_DECL__
 
 typedef enum
 {
@@ -56,7 +56,7 @@ typedef CdataBool (*ListIsDuplicate_fn)(void* p_leftNodeData, void* p_rightNodeD
 // return true if satisfies, or else return false
 typedef CdataBool (*ListCondition_fn)(void* p_nodeData, void* p_userData);
 
-typedef struct _TraverseNodeInfo_s
+typedef struct
 {
     CdataIndex_t index;
     ListNode_t   node;
@@ -182,15 +182,15 @@ void*        List_DetachNodeData(List_t list, ListNode_t node);
 void*        List_DetachNodeDataNL(List_t list, ListNode_t node);
 
 ListNode_t List_GetFirstMatchNode(List_t list, void* p_userData);
-ListNode_t List_GetNextMatchNode(List_t list, ListNode_t startNode, void* p_userData);									   
+ListNode_t List_GetNextMatchNode(List_t list, ListNode_t startNode, void* p_userData);
 ListNode_t List_GetLastMatchNode(List_t list, void* p_userData);
-ListNode_t List_GetPreMatchNode(List_t list, ListNode_t startNode, void* p_userData);		
+ListNode_t List_GetPreMatchNode(List_t list, ListNode_t startNode, void* p_userData);
 
 ListNode_t List_GetFirstMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn conditionFn);
-ListNode_t List_GetNextMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn);									   
+ListNode_t List_GetNextMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn);
 ListNode_t List_GetLastMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn conditionFn);
-ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn);									   
-									   
+ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn);
+
 int List_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode);
 int List_SwapPosNL(List_t list, ListNode_t firstNode, ListNode_t secondNode);
 
@@ -219,6 +219,6 @@ int List_RmFirstMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn 
 CdataCount_t List_RmAllMatchNodes(List_t list, void* p_userData);
 CdataCount_t List_RmAllMatchNodesByCond(List_t list, void* p_userData, ListCondition_fn conditionFn);
 
-__END_EXTERN_C_DECLS__
+__END_EXTERN_C_DECL__
 
 #endif /* _CDATA_LIST_H_ */

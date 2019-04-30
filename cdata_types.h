@@ -33,28 +33,32 @@ Date:2019.4.2
 #include "errvalue.h"
 
 #ifdef __cplusplus
-#undef  __BEGIN_EXTERN_C_DECLS__
-#undef  __END_EXTERN_C_DECLS__
-#define  __BEGIN_EXTERN_C_DECLS__ extern "C"{
-#define  __END_EXTERN_C_DECLS__ }
+#undef  __BEGIN_EXTERN_C_DECL__
+#undef  __END_EXTERN_C_DECL__
+#define  __BEGIN_EXTERN_C_DECL__ extern "C"{
+#define  __END_EXTERN_C_DECL__ }
 #else
-#undef  __BEGIN_EXTERN_C_DECLS__
-#undef  __END_EXTERN_C_DECLS__
-#define  __BEGIN_EXTERN_C_DECLS__ 
-#define  __END_EXTERN_C_DECLS__ 
+#undef  __BEGIN_EXTERN_C_DECL__
+#undef  __END_EXTERN_C_DECL__
+#define  __BEGIN_EXTERN_C_DECL__
+#define  __END_EXTERN_C_DECL__
 #endif
 
 #define CDATA_TRUE (1 == 1)
 #define CDATA_FALSE !(CDATA_TRUE)
 
 
-typedef size_t CdataCount_t;
-typedef size_t CdataIndex_t;
+typedef unsigned long long CdataCount_t;
+typedef unsigned long long CdataIndex_t;
+typedef unsigned long long CdataTime_t;
 
 typedef int CdataBool;
 
 typedef void* List_t;
 typedef void* ListNode_t;
 typedef char  ListName_t[256];
+
+typedef void* Queue_t;
+typedef char  QueueName_t[256];
 
 #endif //_CDATA_TYPES_H_

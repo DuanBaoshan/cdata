@@ -30,7 +30,7 @@ Date:2019.4.1
 
 #include "cdata_types.h"
 
-__BEGIN_EXTERN_C_DECLS__
+__BEGIN_EXTERN_C_DECL__
 
 int SGList_CreateNode(List_t list, void* p_data, ListNode_t* p_node);
 
@@ -45,6 +45,6 @@ int SGList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode)
 
 int SGList_DetachNode(List_t list, ListNode_t node);
 
-__END_EXTERN_C_DECLS__
+__END_EXTERN_C_DECL__
 
 #endif //_CDATA_SGLIST_H_

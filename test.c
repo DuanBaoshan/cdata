@@ -382,7 +382,7 @@ static int TestSimpleList()
     }
 
     List_GetMachCount(g_normalList, &value, &count);
-    LOG_A("The count of value(%d) in the list is:%lu.\n", value, count);
+    LOG_A("The count of value(%d) in the list is:%d.\n", value, (int)count);
 
     List_RmAllMatchNodes(g_normalList, &value);
     LOG_A("After rm all value:%d from list.\n", value);
@@ -410,8 +410,8 @@ static int TestSwapPos()
 
 	ListNode_t node1 = NULL;
     ListNode_t node2 = NULL;
-    CdataIndex_t pos1 = 0;
-    CdataIndex_t pos2 = 0;
+    int pos1 = 0;
+    int pos2 = 0;
 
     for (value = 1; value <= 2; value++)
     {
@@ -462,7 +462,7 @@ static int TestSwapPos()
     node1 = List_GetHead(g_normalList);
     node2 = List_GetNodeAtPos(g_normalList, pos1);
     List_SwapPos(g_normalList, node1, node2);
-    LOG_A("After switch head and pos:%lu:\n", pos1);
+    LOG_A("After switch head and pos:%d:\n", pos1);
 	ShowIntList(g_normalList);
 
     //Switch tail and other node
@@ -470,7 +470,7 @@ static int TestSwapPos()
     node1 = List_GetTail(g_normalList);
     node2 = List_GetNodeAtPos(g_normalList, pos1);
     List_SwapPos(g_normalList, node1, node2);
-    LOG_A("After switch tail and pos:%lu:\n", pos1);
+    LOG_A("After switch tail and pos:%d:\n", pos1);
 	ShowIntList(g_normalList);
 
     //Switch neighbour
@@ -479,7 +479,7 @@ static int TestSwapPos()
     node1 = List_GetNodeAtPos(g_normalList, pos1);
     node2 = List_GetNodeAtPos(g_normalList, pos2);
     List_SwapPos(g_normalList, node1, node2);
-    LOG_A("After switch neighbour, pos1:%lu and pos2:%lu:\n", pos1, pos2);
+    LOG_A("After switch neighbour, pos1:%d and pos2:%d:\n", pos1, pos2);
 	ShowIntList(g_normalList);
 
     //Switch two normal nodes
@@ -488,7 +488,7 @@ static int TestSwapPos()
     node1 = List_GetNodeAtPos(g_normalList, pos1);
     node2 = List_GetNodeAtPos(g_normalList, pos2);
     List_SwapPos(g_normalList, node1, node2);
-    LOG_A("After switch two normal nodes, pos1:%lu and pos2:%lu:\n", pos1, pos2);
+    LOG_A("After switch two normal nodes, pos1:%d and pos2:%d:\n", pos1, pos2);
 	ShowIntList(g_normalList);
 
 	errRet = 0;
@@ -893,7 +893,7 @@ static int TestReferenceList()
 	// Test List_GetMachCount
 	CdataCount_t count = 0;
 	List_GetMachCountByCond(g_studentList, &condition, FindJohn, &count);
-	LOG_A("Find boys with name '%s', count:%lu.\n", condition.name, count);
+	LOG_A("Find boys with name '%s', count:%d.\n", condition.name, (int)count);
 
 	//Test List_DataExistsByCond
 	memset(condition.name, 0, sizeof(condition.name));
