@@ -191,7 +191,7 @@ ListNode_t List_GetNextMatchNodeByCond(List_t list, ListNode_t startNode, void* 
 ListNode_t List_GetLastMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn conditionFn);
 ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn);
 
-int List_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode);
+int List_Swap(List_t list, ListNode_t firstNode, ListNode_t secondNode);
 int List_SwapPosNL(List_t list, ListNode_t firstNode, ListNode_t secondNode);
 
 int List_DetachNode(List_t list, ListNode_t node);

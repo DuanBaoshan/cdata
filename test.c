@@ -430,7 +430,7 @@ static int TestSwapPos()
     //Switch head and tail
     node1 = List_GetHead(g_normalList);
     node2 = List_GetTail(g_normalList);
-    List_SwapPos(g_normalList, node1, node2);
+    List_Swap(g_normalList, node1, node2);
     LOG_A("After switch head and tail:\n");
 	ShowIntList(g_normalList);
 
@@ -453,7 +453,7 @@ static int TestSwapPos()
     //Switch head and tail
     node1 = List_GetHead(g_normalList);
     node2 = List_GetTail(g_normalList);
-    List_SwapPos(g_normalList, node1, node2);
+    List_Swap(g_normalList, node1, node2);
     LOG_A("After switch head and tial:\n");
 	ShowIntList(g_normalList);
 
@@ -461,7 +461,7 @@ static int TestSwapPos()
     pos1 = 3;
     node1 = List_GetHead(g_normalList);
     node2 = List_GetNodeAtPos(g_normalList, pos1);
-    List_SwapPos(g_normalList, node1, node2);
+    List_Swap(g_normalList, node1, node2);
     LOG_A("After switch head and pos:%d:\n", pos1);
 	ShowIntList(g_normalList);
 
@@ -469,7 +469,7 @@ static int TestSwapPos()
     pos1 = 3;
     node1 = List_GetTail(g_normalList);
     node2 = List_GetNodeAtPos(g_normalList, pos1);
-    List_SwapPos(g_normalList, node1, node2);
+    List_Swap(g_normalList, node1, node2);
     LOG_A("After switch tail and pos:%d:\n", pos1);
 	ShowIntList(g_normalList);
 
@@ -478,7 +478,7 @@ static int TestSwapPos()
     pos2 = pos1 + 1;
     node1 = List_GetNodeAtPos(g_normalList, pos1);
     node2 = List_GetNodeAtPos(g_normalList, pos2);
-    List_SwapPos(g_normalList, node1, node2);
+    List_Swap(g_normalList, node1, node2);
     LOG_A("After switch neighbour, pos1:%d and pos2:%d:\n", pos1, pos2);
 	ShowIntList(g_normalList);
 
@@ -487,7 +487,7 @@ static int TestSwapPos()
     pos2 = pos1 + 3;
     node1 = List_GetNodeAtPos(g_normalList, pos1);
     node2 = List_GetNodeAtPos(g_normalList, pos2);
-    List_SwapPos(g_normalList, node1, node2);
+    List_Swap(g_normalList, node1, node2);
     LOG_A("After switch two normal nodes, pos1:%d and pos2:%d:\n", pos1, pos2);
 	ShowIntList(g_normalList);
 

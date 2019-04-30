@@ -1767,7 +1767,7 @@ ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p
 	return p_node;
 }
 
-int List_SwapPos(List_t list, ListNode_t firstNode, ListNode_t secondNode)
+int List_Swap(List_t list, ListNode_t firstNode, ListNode_t secondNode)
 {
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 	CHECK_PARAM(firstNode != NULL, ERR_BAD_PARAM);
