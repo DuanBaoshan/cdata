@@ -1,6 +1,8 @@
 TARGET := hello
 LIB_NAME := libcdata.so
-SRC_DIRS := src
+LIB_SRC_DIRS := src
+EXE_SRC_DIRS := ./ testcase
+
 CXX := g++
 CC := gcc
 ECHO := echo
@@ -12,8 +14,11 @@ BIN_DIR := bin
 LIB_DIR := lib
 COMILE_GOAL :=
 
-SRC_FILES := $(foreach dir, $(SRC_DIRS), $(notdir $(wildcard $(dir)/*.c)))
-OBJ_FILES := $(patsubst %.c, %.o, $(SRC_FILES))
+LIB_SRC_FILES := $(foreach dir, $(LIB_SRC_DIRS), $(notdir $(wildcard $(dir)/*.c)))
+LIB_OBJ_FILES := $(patsubst %.c, %.o, $(LIB_SRC_FILES))
+
+EXE_SRC_FILES := $(foreach dir, $(EXE_SRC_DIRS), $(notdir $(wildcard $(dir)/*.c)))
+EXE_OBJ_FILES := $(patsubst %.c, %.o, $(EXE_SRC_FILES))
 
 ifeq ($(MAKECMDGOALS), release)
     CXXFLAGS := -D_RELEASE_VERSION_ -D_DEBUG_LEVEL_=3 -O2
@@ -26,18 +31,20 @@ else
 endif
 
 OBJ_DIR := $(OBJ_DIR)/$(COMILE_GOAL)
-OBJ_FULL_PATH_FILES := $(addprefix $(OBJ_DIR)/, $(OBJ_FILES))
+LIB_OBJ_FULL_PATH_FILES := $(addprefix $(OBJ_DIR)/, $(LIB_OBJ_FILES))
+EXE_OBJ_FULL_PATH_FILES := $(addprefix $(OBJ_DIR)/, $(EXE_OBJ_FILES))
 
 BIN_DIR := $(BIN_DIR)/$(COMILE_GOAL)
 LIB_DIR := $(LIB_DIR)/$(COMILE_GOAL)
 
 FULL_PATH_LIB_FILE  := $(addprefix $(LIB_DIR)/, $(LIB_NAME))
 	
-vpath %.c $(SRC_DIRS)
+vpath %.c $(LIB_SRC_DIRS)
+vpath %.c $(EXE_SRC_DIRS)
 vpath %.o $(OBJ_DIR)
 
 CXXFLAGS += -I./include -I./ -std=c++0x -Wl,-rpath=$(LIB_DIR)
-CCFLAGS += -I./include -I./ -Wl,-rpath=$(LIB_DIR)
+CCFLAGS += -I./include -I./ -I./testcase -Wl,-rpath=$(LIB_DIR)
 
 .PHONY:all COMPILE_LIB COMPILE_EXECUTE MK_OBJ_DIR
 
@@ -58,27 +65,26 @@ MK_ALL_DIRS:
 	@$(MKDIR) $(LIB_DIR)
 	@$(MKDIR) $(BIN_DIR)
 	
-COMPILE_LIB:$(OBJ_FILES)
+COMPILE_LIB:$(LIB_OBJ_FILES)
 	@$(ECHO) "Compiling libcdata.so ..."
-	$(CC)  -shared $(OBJ_FULL_PATH_FILES) -o $(FULL_PATH_LIB_FILE) -lrt
+	$(CC)  -shared $(LIB_OBJ_FULL_PATH_FILES) -o $(FULL_PATH_LIB_FILE) -lrt
 	@$(ECHO) "Done!"
 	@$(ECHO) 
 	
 DEBUG_SHOW_VALUE:
 	@$(ECHO) "========================SRC File============================="
-	@$(ECHO) $(SRC_FILES)
+	@$(ECHO) $(LIB_SRC_FILES)
 	@$(ECHO) "========================================================"
 	@$(ECHO)
 	@$(ECHO) "========================OBJ File============================="
-	@$(ECHO) $(OBJ_FILES)
+	@$(ECHO) $(LIB_OBJ_FILES)
 	@$(ECHO) "========================================================"
 	@$(ECHO)
 	
     
-COMPILE_EXECUTE:main.o
+COMPILE_EXECUTE:$(EXE_OBJ_FILES)
 	@$(ECHO) "Compiling execute file..." 
-	@$(CC) $(CCFLAGS)  -o $(OBJ_DIR)/main.o -c main.c
-	@$(CC) $(CCFLAGS) $(OBJ_DIR)/main.o -o $(BIN_DIR)/$(TARGET) -L$(LIB_DIR) -lpthread -lrt -lcdata
+	$(CC) $(CCFLAGS) $(EXE_OBJ_FULL_PATH_FILES) -o $(BIN_DIR)/$(TARGET) -L$(LIB_DIR) -lpthread -lrt -lcdata
 	@$(ECHO) "Done!"
 	@$(ECHO)
 	

@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "cdata.h"
+#include "test_case.h"
 
 #ifndef _DEBUG_LEVEL_
 #define _DEBUG_LEVEL_  2
@@ -11,14 +12,23 @@
 #include "debug.h"
 
 
-typedef int (*TestcaseFn_t)(void);
+static void Init(void);
+static void Show(void);
+static void Run(int id);
+static int GetTestcaseCount(void);
+static void Finalize(void);
 
-typedef struct
+TestcaseSet_t ListTestcaseSet =
 {
-    char *p_description;
-    TestcaseFn_t testcaseFn;
-}Testcase_t;
+    "Test all list functions.",
+    Init,
+    Show,
+    Run,
+    GetTestcaseCount,
+    Finalize
+};
 
+//==========================================================================
 typedef struct
 {
 	char *p_name;
@@ -36,13 +46,7 @@ typedef struct
 	int age;
 }StudentKeyword_t;
 
-static ListType_e g_listType;
-static List_t g_normalList;
-static List_t g_studentList;
-
-static void ShowAllTestcases();
-static void RunTestcase(int id);
-
+//=========================================================================
 static int InitList(ListType_e listType);
 static int DestroyList();
 
@@ -72,6 +76,7 @@ static int TestMatchByCond();
 static int TestMultiThread();
 static int TestMultiThreadLock();
 
+//=========================================================================
 static Testcase_t g_testcaseArray[] =
 {
     {"Change list type.", ChangeListType},
@@ -88,6 +93,59 @@ static Testcase_t g_testcaseArray[] =
 	{"Test multi thread with List_Lock", TestMultiThreadLock},
 };
 
+static ListType_e g_listType;
+static List_t g_normalList;
+static List_t g_studentList;
+
+//=========================================================================
+static void Init(void)
+{
+    g_listType = LIST_TYPE_DOUBLE_LINK;
+	InitList(g_listType);
+}
+
+static void Show(void)
+{
+    int i = 0;
+
+    printf("\n==============================================\n");
+    for (i = 0; i < sizeof(g_testcaseArray) / sizeof(g_testcaseArray[0]); i++)
+    {
+        printf("%d: %s\n", i, g_testcaseArray[i].p_description);
+    }
+    printf("==============================================\n");
+}
+
+static void Run(int id)
+{
+    if (id < 0 || id >= sizeof(g_testcaseArray) / sizeof(g_testcaseArray[0]))
+    {
+        return;
+    }
+
+    int ret = g_testcaseArray[id].testcaseFn();
+    if (ret == 0)
+    {
+        printf("Testcase %d passed.\n", id);
+    }
+    else
+    {
+        printf("Testcase %d failed.\n", id);
+    }
+}
+
+static void Finalize(void)
+{
+    DestroyList();
+}
+
+static int GetTestcaseCount(void)
+{
+    return sizeof(g_testcaseArray) / sizeof(g_testcaseArray[0]);
+}
+
+
+//=========================================================================
 static int InitList(ListType_e listType)
 {
     int ret = ERR_OK;
@@ -169,70 +227,6 @@ static int ChangeListType()
     InitList(g_listType);
 
     return 0;
-}
-
-
-int main(int argc, char* argv[])
-{
-    LOG_A("Hello cdata list.\n");
-
-    int id = 0;
-    char choice[128];
-
-    g_listType = LIST_TYPE_DOUBLE_LINK;
-	InitList(g_listType);
-
-    while (1)
-    {
-        ShowAllTestcases();
-
-        printf("Please input a testcase id(q for quit):");
-        scanf("%s", choice);
-
-        if (strcmp(choice, "q") == 0)
-        {
-            break;
-        }
-
-        id = atoi(choice);
-        printf("You select:%d.\n", id);
-
-        RunTestcase(id);
-    }
-
-	DestroyList();
-
-    return 0;
-}
-
-static void ShowAllTestcases()
-{
-    int i = 0;
-
-    printf("\n==============================================\n");
-    for (i = 0; i < sizeof(g_testcaseArray) / sizeof(g_testcaseArray[0]); i++)
-    {
-        printf("%d: %s\n", i, g_testcaseArray[i].p_description);
-    }
-}
-
-static void RunTestcase(int id)
-{
-    if (id < 0 || id >= sizeof(g_testcaseArray) / sizeof(g_testcaseArray[0]))
-    {
-        printf("Wrong id:%d.\n", id);
-        return;
-    }
-
-    int ret = g_testcaseArray[id].testcaseFn();
-    if (ret == 0)
-    {
-        printf("Testcase %d passed.\n", id);
-    }
-    else
-    {
-        printf("Testcase %d failed.\n", id);
-    }
 }
 
 CdataBool IntEqualListData(void* p_nodeData, void* p_userData)
