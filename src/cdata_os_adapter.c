@@ -1,3 +1,7 @@
+#include <inttypes.h>
+#include <stdlib.h>
+
+#include <time.h>
 #include <errno.h>
 #include <pthread.h>
 
@@ -9,6 +13,11 @@
 #endif
 #include "debug.h"
 
+/*=============================================================================*
+ *                        Macro definition
+ *============================================================================*/
+#define TO_MUTEX(_mutex_)       (pthread_mutex_t*)(_mutex_)
+#define TO_COND(_cond_)         (OSCond_st*)(_cond_)
 
 /*=============================================================================*
  *                        Const definition
@@ -23,11 +32,6 @@ typedef struct
     pthread_cond_t cond;
 }OSCond_st;
 
-/*=============================================================================*
- *                        Macro definition
- *============================================================================*/
-#define TO_MUTEX(_mutex_)       (pthread_mutex_t*)(_mutex_)
-#define TO_COND(_cond_)         (OSCond_st*)(_cond_)
 /*=============================================================================*
  *                    Inner function declaration
  *============================================================================*/
@@ -124,7 +128,10 @@ OSCond_t OS_CondCreate()
         return NULL;
     }
 
-    if (pthread_cond_init(&p_cond->cond, NULL) != 0)
+    pthread_condattr_t condAttr;
+    pthread_condattr_init(&condAttr);
+    pthread_condattr_setclock(&condAttr, CLOCK_MONOTONIC);
+    if (pthread_cond_init(&p_cond->cond, &condAttr) != 0)
     {
         LOG_E("Fail to init pthread_cond.\n");
 
@@ -170,7 +177,43 @@ int OS_CondWait(OSCond_t cond)
 
 int OS_CondTimedWait(OSCond_t cond, CdataTime_t timeoutMs)
 {
-    return ERR_OK;
+    CHECK_PARAM(cond != NULL, ERR_BAD_PARAM);
+
+    struct timespec curTime;
+    int ret = 0;
+    OSCond_st* p_cond = TO_COND(cond);
+
+    memset(&curTime, 0, sizeof(struct timespec));
+    clock_gettime(CLOCK_MONOTONIC, &curTime);
+
+    curTime.tv_sec += timeoutMs / 1000;
+    curTime.tv_nsec += (timeoutMs % 1000) * 1000000;
+    if (curTime.tv_nsec >= 1000000000)
+    {
+        curTime.tv_sec += curTime.tv_nsec / 1000000000;
+        curTime.tv_nsec = curTime.tv_nsec % 1000000000;
+    }
+
+    errno = 0;
+    ret = pthread_cond_timedwait(&p_cond->cond, TO_MUTEX(p_cond->mutex), &curTime);
+    if (ret != 0)
+    {
+        if (errno == ETIMEDOUT)
+        {
+            ret = ERR_TIME_OUT;
+        }
+        else
+        {
+            ret = ERR_FAIL;
+            LOG_E("Fail to timed wait, error:%d, '%s'.\n", errno, strerror(errno));
+        }
+    }
+    else
+    {
+        ret = ERR_OK;
+    }
+
+    return ret;
 }
 
 int OS_CondLock(OSCond_t cond)

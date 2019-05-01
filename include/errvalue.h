@@ -10,6 +10,7 @@ enum
     ERR_BAD_PARAM,
     ERR_DATA_NOT_EXISTS,
 	ERR_DATA_EXISTS,
+	ERR_TIME_OUT,
 };
 
 #endif // ERRVALUE_H

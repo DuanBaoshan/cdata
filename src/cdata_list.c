@@ -272,7 +272,7 @@ int List_Clear(List_t list)
 	void* 		p_head = p_list->p_head;
 	void* 		p_next = NULL;
 
-	LOG_I("Clear dblist:'%s', nodeCount:%llu.\n", p_list->name, p_list->nodeCount);
+	LOG_I("Clear '%s', nodeCount:%llu.\n", p_list->name, p_list->nodeCount);
 
 	List_Lock(list);
 	while (p_head != NULL)
@@ -290,13 +290,13 @@ int List_Clear(List_t list)
     return ERR_OK;
 }
 
-int List_Destory(List_t list)
+int List_Destroy(List_t list)
 {
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 
     List_st*     p_list = CONVERT_2_LIST(list);
 
-    LOG_I("Destroy dblist:'%s'.\n", p_list->name);
+    LOG_I("Destroy '%s'.\n", p_list->name);
 
     List_Clear(list);
     DeleteGuard(p_list->guard);

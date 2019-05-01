@@ -135,14 +135,14 @@ static int DestroyList()
 {
     int ret = ERR_OK;
 
-    ret = List_Destory(g_normalList);
+    ret = List_Destroy(g_normalList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy normal list.\n");
         return -1;
     }
 
-    ret = List_Destory(g_studentList);
+    ret = List_Destroy(g_studentList);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to destroy pointer list.\n");
@@ -871,7 +871,7 @@ static int TestNormalStructureList()
 	}
 	printf("===============%s begin=============================\n", List_Name(list));
 
-	List_Destory(list);
+	List_Destroy(list);
 
 	return 0;
 }
@@ -1311,6 +1311,6 @@ static int TestMultiThreadLock()
 	pthread_join(id1, NULL);
 	pthread_join(id2, NULL);
 
-	List_Destory(list);
+	List_Destroy(list);
 	return 0;
 }

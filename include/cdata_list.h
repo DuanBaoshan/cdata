@@ -91,7 +91,7 @@ int List_TraverseReversely(List_t list, void *p_userData, ListTraverse_fn traver
 int List_Uniquefy(List_t list);
 
 int List_Clear(List_t list);
-int List_Destory(List_t list);
+int List_Destroy(List_t list);
 
 //========================================================================================
 //                    Data related functions
