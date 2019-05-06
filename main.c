@@ -7,15 +7,17 @@
 #include "test_case.h"
 
 #ifndef _DEBUG_LEVEL_
-#define _DEBUG_LEVEL_  2
+#define _DEBUG_LEVEL_  _DEBUG_LEVEL_I_
 #endif
 #include "debug.h"
 
 //=============================================================================
 extern TestcaseSet_t ListTestcaseSet;
+extern TestcaseSet_t QueueTestcaseSet;
+
 //=============================================================================
 static void ShowRootMenu(List_t rootMenuList);
-static TestcaseSet_t* ShowSubMenu(List_t rootMenuList, int subMenuId);
+static TestcaseSet_t* GetAndShowSubMenu(List_t rootMenuList, int subMenuId);
 static void Traverse(ListTraverseNodeInfo_t * p_info,void * p_userData,CdataBool * p_needStop);
 static void FreeData(void *p_data);
 //=============================================================================
@@ -33,6 +35,7 @@ int main(int argc, char* argv[])
     List_CreateRef("TestcaseSetList", LIST_TYPE_SINGLE_LINK, &testcaseList);
     List_SetFreeDataFunc(testcaseList, FreeData);
     List_InsertData(testcaseList, &ListTestcaseSet);
+    List_InsertData(testcaseList, &QueueTestcaseSet);
 
     while (1)
     {
@@ -44,7 +47,7 @@ int main(int argc, char* argv[])
         {
             if (p_curTestcase == NULL)
             {
-                p_curTestcase = ShowSubMenu(testcaseList, id);
+                p_curTestcase = GetAndShowSubMenu(testcaseList, id);
             }
             else
             {
@@ -72,21 +75,13 @@ int main(int argc, char* argv[])
                 p_curTestcase = NULL;
             }
 
-            curState--;
+            curState = 0;
         }
         else
         {
             id = atoi(choice);
 
-            if (p_curTestcase == NULL)
-            {
-                testcaseCount = List_Count(testcaseList);
-            }
-            else
-            {
-                testcaseCount = p_curTestcase->GetTestcaseCount();
-            }
-
+            testcaseCount = (p_curTestcase == NULL) ? List_Count(testcaseList) : p_curTestcase->GetTestcaseCount();
             if (id < 0 || id >= testcaseCount)
             {
                 printf("Invalid id:%d.\n", id);
@@ -95,11 +90,7 @@ int main(int argc, char* argv[])
             else
             {
                 isValidId = 1;
-
-                if (curState < 1)
-                {
-                    curState++;
-                }
+                curState = 1;
             }
 
         }
@@ -118,7 +109,7 @@ static void ShowRootMenu(List_t rootMenuList)
     printf("================================================\n");
 }
 
-static TestcaseSet_t* ShowSubMenu(List_t rootMenuList, int subMenuId)
+static TestcaseSet_t* GetAndShowSubMenu(List_t rootMenuList, int subMenuId)
 {
     TestcaseSet_t *p_curTestcase = (TestcaseSet_t*)List_GetDataAtPos(rootMenuList, subMenuId);
 

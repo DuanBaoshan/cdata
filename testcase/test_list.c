@@ -7,7 +7,7 @@
 #include "test_case.h"
 
 #ifndef _DEBUG_LEVEL_
-#define _DEBUG_LEVEL_  2
+#define _DEBUG_LEVEL_  _DEBUG_LEVEL_I_
 #endif
 #include "debug.h"
 
@@ -1297,7 +1297,8 @@ static int TestMultiThreadLock()
 	pthread_t id2;
 
 	List_t list;
-	List_Create("TestList", LIST_TYPE_DOUBLE_LINK, sizeof(Student_t), &list);
+	List_Create("TestList", g_listType, sizeof(Student_t), &list);
+    List_SetFreeDataFunc(list, FreeStudentData);
 
 	pthread_create(&id1, NULL, WriteThread, &list);
 	pthread_create(&id2, NULL, ReadThread, &list);
@@ -1305,6 +1306,13 @@ static int TestMultiThreadLock()
 	pthread_join(id1, NULL);
 	pthread_join(id2, NULL);
 
+    LOG_A("Will destroy list.\n");
 	List_Destroy(list);
 	return 0;
 }
+
+/*=============================================================================*
+ *                                End of file
+ *============================================================================*/
+
+

@@ -19,4 +19,10 @@ typedef struct
     TestcaseFn_t testcaseFn;
 }Testcase_t;
 
+typedef struct
+{
+    char *p_message;
+    int   msgLen;
+}Message_t;
+
 #endif //_TEST_CASE_H_

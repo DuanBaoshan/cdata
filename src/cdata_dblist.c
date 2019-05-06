@@ -36,9 +36,10 @@ Date:2019.3.28
 #include "cdata_dblist.h"
 
 #ifndef _DEBUG_LEVEL_
-#define _DEBUG_LEVEL_  2
+#define _DEBUG_LEVEL_  _DEBUG_LEVEL_I_
 #endif
 #include "debug.h"
+
 
 /*=============================================================================*
  *                        Macro definition

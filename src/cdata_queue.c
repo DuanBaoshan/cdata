@@ -36,6 +36,7 @@ Date:2019.4.30
 #endif
 #include "debug.h"
 
+
 /*=============================================================================*
  *                        Macro definition
  *============================================================================*/
@@ -50,8 +51,9 @@ Date:2019.4.30
 typedef struct
 {
     OSCond_t cond;
-    List_t   list;
     CdataBool empty;
+    QueueValueCp_fn valueCpFn;
+    List_t   list;
 }Queue_st;
 
 typedef struct
@@ -63,17 +65,18 @@ typedef struct
 /*=============================================================================*
  *                    Inner function declaration
  *============================================================================*/
-static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataSize);
+static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataSize, QueueValueCp_fn valueCpFn);
 static void ListTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse);
 static void CheckIfNeedNotifyCondSignal(Queue_st *p_queue);
 /*=============================================================================*
  *                    Outer function implemention
  *============================================================================*/
-int Queue_Create(QueueName_t name, int dataSize, Queue_t* p_queue)
+int Queue_Create(QueueName_t name, int dataSize, QueueValueCp_fn valueCpFn, Queue_t* p_queue)
 {
     CHECK_PARAM(p_queue != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(valueCpFn != NULL, ERR_BAD_PARAM);
 
-    Queue_t newQueue = CreateQueue(name, LIST_DATA_TYPE_VALUE_COPY, dataSize);
+    Queue_t newQueue = CreateQueue(name, LIST_DATA_TYPE_VALUE_COPY, dataSize, valueCpFn);
     if (newQueue == NULL)
     {
         LOG_E("Fail to create queue:'%s'.\n", name);
@@ -83,11 +86,12 @@ int Queue_Create(QueueName_t name, int dataSize, Queue_t* p_queue)
     *p_queue = newQueue;
     return ERR_OK;
 }
-int Queue_CreateRef(QueueName_t name, Queue_t* p_queue)
+int Queue_CreateRef(QueueName_t name, QueueValueCp_fn valueCpFn, Queue_t* p_queue)
 {
     CHECK_PARAM(p_queue != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(valueCpFn != NULL, ERR_BAD_PARAM);
 
-    Queue_t newQueue = CreateQueue(name, LIST_DATA_TYPE_VALUE_REFERENCE, 0);
+    Queue_t newQueue = CreateQueue(name, LIST_DATA_TYPE_VALUE_REFERENCE, 0, valueCpFn);
     if (newQueue == NULL)
     {
         LOG_E("Fail to create queue:'%s'.\n", name);
@@ -148,12 +152,17 @@ int Queue_Push2Head(Queue_t queue, void *p_data)
     return ERR_OK;
 }
 
-void* Queue_Pop(Queue_t queue)
+int Queue_Pop(Queue_t queue)
 {
     CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
     Queue_st *p_queue = TO_QUEUE(queue);
 
-    List_DetachHeadData(p_queue->list);
+    int ret = List_RmHead(p_queue->list);
+    if (ret != ERR_OK)
+    {
+        LOG_E("Fail to pop queue.\n");
+        return ERR_FAIL;
+    }
 
     OS_CondLock(p_queue->cond);
     p_queue->empty = (List_Count(p_queue->list) == 0) ? CDATA_TRUE : CDATA_FALSE;
@@ -161,31 +170,37 @@ void* Queue_Pop(Queue_t queue)
 
     return ERR_OK;
 }
-void* Queue_Head(Queue_t queue)
+int Queue_GetHead(Queue_t queue, void* p_headData)
 {
     CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
-    Queue_st *p_queue = TO_QUEUE(queue);
+    CHECK_PARAM(p_headData != NULL, ERR_BAD_PARAM);
 
-    return List_GetHeadData(p_queue->list);
-}
-
-void Queue_Lock(Queue_t queue)
-{
-    CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
+    int ret = ERR_OK;
     Queue_st *p_queue = TO_QUEUE(queue);
+    void *p_queueData = NULL;
 
     List_Lock(p_queue->list);
+    p_queueData = List_GetHeadDataNL(p_queue->list);
+    if (p_queueData == NULL)
+    {
+        LOG_E("Queue data is NULL.\n");
+        ret = ERR_FAIL;
+        goto EXIT;
 
-    return;
-}
-void Queue_UnLock(Queue_t queue)
-{
-    CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
-    Queue_st *p_queue = TO_QUEUE(queue);
+    }
 
+    ret = p_queue->valueCpFn(p_queueData, p_headData);
+    if (ret != 0)
+    {
+        LOG_E("Fail to copy head data to user.\n");
+        ret = ERR_FAIL;
+        goto EXIT;
+    }
+    ret = ERR_OK;
+    EXIT:
     List_UnLock(p_queue->list);
 
-    return;
+    return ret;
 }
 
 int Queue_WaitDataReady(Queue_t queue)
@@ -206,15 +221,20 @@ int Queue_TimedWaitDataReady(Queue_t queue, CdataTime_t timeOutMs)
 {
     CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
     Queue_st *p_queue = TO_QUEUE(queue);
+    int ret = 0;
 
     OS_CondLock(p_queue->cond);
     while (p_queue->empty)
     {
-        OS_CondTimedWait(p_queue->cond, timeOutMs);
+        ret = OS_CondTimedWait(p_queue->cond, timeOutMs);
+        if (ret == ERR_TIME_OUT)
+        {
+            break;
+        }
     }
     OS_CondUnlock(p_queue->cond);
 
-    return ERR_OK;
+    return ret;
 }
 
 int Queue_Traverse(Queue_t queue, void*p_userData, QueueTraverse_fn traverseFn)
@@ -241,13 +261,17 @@ int Queue_Destroy(Queue_t queue)
     CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
     Queue_st *p_queue = TO_QUEUE(queue);
 
-    return List_Destroy(p_queue->list);
+    List_Destroy(p_queue->list);
+    OS_CondDestroy(p_queue->cond);
+    OS_Free(p_queue);
+
+    return ERR_OK;
 }
 
 /*=============================================================================*
  *                    Inner function implemention
  *============================================================================*/
-static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataSize)
+static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataSize, QueueValueCp_fn valueCpFn)
 {
     int ret = 0;
     Queue_st *p_queue = NULL;
@@ -261,6 +285,7 @@ static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataS
 
     memset(p_queue, 0, sizeof(Queue_st));
     p_queue->empty = CDATA_FALSE;
+    p_queue->valueCpFn = valueCpFn;
 
     p_queue->cond = OS_CondCreate();
     if (p_queue->cond == NULL)

@@ -2,6 +2,10 @@ TARGET := hello
 LIB_NAME := libcdata.so
 LIB_SRC_DIRS := src
 EXE_SRC_DIRS := ./ testcase
+INCLUDE_DIRS := -I./include -I./ -I./src -I./testcase
+CXXFLAGS :=
+CCFLAGS :=
+
 
 CXX := g++
 CC := gcc
@@ -21,12 +25,12 @@ EXE_SRC_FILES := $(foreach dir, $(EXE_SRC_DIRS), $(notdir $(wildcard $(dir)/*.c)
 EXE_OBJ_FILES := $(patsubst %.c, %.o, $(EXE_SRC_FILES))
 
 ifeq ($(MAKECMDGOALS), release)
-    CXXFLAGS := -D_RELEASE_VERSION_ -D_DEBUG_LEVEL_=3 -O2
-    CCFLAGS := -D_RELEASE_VERSION_ -D_DEBUG_LEVEL_=3 -O2
+    CXXFLAGS += -D_RELEASE_VERSION_  -D_DEBUG_LEVEL_=3 -O2
+    CCFLAGS += -D_RELEASE_VERSION_ -D_DEBUG_LEVEL_=3 -O2
 	COMILE_GOAL := release
 else
-    CXXFLAGS := -D_DEBUG_ALL_PRINT_BUFFER_ON_ -D_DEBUG_LEVEL_=0 -Wall -Wformat -g
-    CCFLAGS := -D_DEBUG_ALL_PRINT_BUFFER_ON_ -D_DEBUG_LEVEL_=0 -Wall -Wformat -g
+    CXXFLAGS += -D_DEBUG_ALL_PRINT_BUFFER_ON_ -D_DEBUG_LEVEL_=0 -Wall -Wformat -g
+    CCFLAGS +=  -D_DEBUG_ALL_PRINT_BUFFER_ON_ -D_DEBUG_LEVEL_=0 -Wall -Wformat -g
 	COMILE_GOAL := debug
 endif
 
@@ -43,8 +47,8 @@ vpath %.c $(LIB_SRC_DIRS)
 vpath %.c $(EXE_SRC_DIRS)
 vpath %.o $(OBJ_DIR)
 
-CXXFLAGS += -I./include -I./ -std=c++0x -Wl,-rpath=$(LIB_DIR)
-CCFLAGS += -I./include -I./ -I./testcase -Wl,-rpath=$(LIB_DIR)
+CXXFLAGS +=  $(INCLUDE_DIRS) -std=c++0x -Wl,-rpath=$(LIB_DIR)
+CCFLAGS +=  $(INCLUDE_DIRS) -Wl,-rpath=$(LIB_DIR)
 
 .PHONY:all COMPILE_LIB COMPILE_EXECUTE MK_OBJ_DIR
 

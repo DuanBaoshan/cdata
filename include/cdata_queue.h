@@ -39,11 +39,12 @@ typedef struct
     void*        p_data;
 }QueueTraverseDataInfo_t;
 
+typedef int (*QueueValueCp_fn)(void *p_queueData, void* p_userData);
 typedef void (*QueueFreeData_fn)(void* p_data);
-typedef void (*QueueTraverse_fn)(QueueTraverseDataInfo_t *p_ququeData, void* p_userData);
+typedef void (*QueueTraverse_fn)(QueueTraverseDataInfo_t *p_queueData, void* p_userData);
 
-int Queue_Create(QueueName_t name, int dataSize, Queue_t* p_queue);
-int Queue_CreateRef(QueueName_t name, Queue_t* p_queue);
+int Queue_Create(QueueName_t name, int dataSize, QueueValueCp_fn valueCpFn, Queue_t* p_queue);
+int Queue_CreateRef(QueueName_t name, QueueValueCp_fn valueCpFn, Queue_t* p_queue);
 
 const char*  Queue_Name(Queue_t queue);
 CdataCount_t Queue_Count(Queue_t queue);
@@ -52,15 +53,11 @@ int Queue_SetFreeFunc(Queue_t queue, QueueFreeData_fn freeFn);
 
 int Queue_Push(Queue_t queue, void *p_data);
 int Queue_Push2Head(Queue_t queue, void *p_data);
-void* Queue_Pop(Queue_t queue);
-void* Queue_Head(Queue_t queue);
-
-void Queue_Lock(Queue_t queue);
-void Queue_UnLock(Queue_t queue);
+int  Queue_Pop(Queue_t queue);
+int  Queue_GetHead(Queue_t queue, void* p_headData);
 
 int Queue_WaitDataReady(Queue_t queue);
 int Queue_TimedWaitDataReady(Queue_t queue, CdataTime_t timeOutMs);
-
 
 int Queue_Traverse(Queue_t queue, void*p_userData, QueueTraverse_fn traverseFn);
 

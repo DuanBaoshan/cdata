@@ -33,9 +33,10 @@ Date:2019.4.2
 #include "cdata_sglist.h"
 
 #ifndef _DEBUG_LEVEL_
-#define _DEBUG_LEVEL_  2
+#define _DEBUG_LEVEL_  _DEBUG_LEVEL_I_
 #endif
 #include "debug.h"
+
 
 /*=============================================================================*
  *                        Macro definition
@@ -79,7 +80,7 @@ int List_Create(ListName_t name, ListType_e type, int dataLength, List_t* p_list
 
 	*p_list = list;
 
-    LOG_I("Success to create list:'%s'.\n", name);
+    LOG_I("Success to create:'%s'.\n", name);
 
     return ERR_OK;
 }
@@ -1565,12 +1566,12 @@ ListNode_t List_GetFirstMatchNode(List_t list, void* p_userData)
 ListNode_t List_GetNextMatchNode(List_t list, ListNode_t startNode, void* p_userData)
 {
     CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(startNode != NULL, NULL);
     CHECK_PARAM(p_userData != NULL, NULL);
 
 	void* 	p_node = NULL;
 	void *	p_data = NULL;
 	List_st* p_list = CONVERT_2_LIST(list);
+
 
 	if (p_list->equalFn == NULL)
 	{
@@ -1630,7 +1631,6 @@ ListNode_t List_GetLastMatchNode(List_t list, void* p_userData)
 ListNode_t List_GetPreMatchNode(List_t list, ListNode_t startNode, void* p_userData)
 {
     CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(startNode != NULL, NULL);
     CHECK_PARAM(p_userData != NULL, NULL);
 
 	void* 	p_node = NULL;
@@ -1688,7 +1688,6 @@ ListNode_t List_GetFirstMatchNodeByCond(List_t list, void* p_userData, ListCondi
 ListNode_t List_GetNextMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(startNode != NULL, NULL);
     CHECK_PARAM(conditionFn != NULL, NULL);
 
 	void* 	p_node = NULL;
@@ -1737,10 +1736,9 @@ ListNode_t List_GetLastMatchNodeByCond(List_t list, void* p_userData, ListCondit
 	return p_node;
 }
 
-ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData,                                      ListCondition_fn conditionFn)
+ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(startNode != NULL, NULL);
     CHECK_PARAM(conditionFn != NULL, NULL);
 
 	void* 	p_node = NULL;

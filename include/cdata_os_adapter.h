@@ -11,8 +11,13 @@ typedef void* OSCond_t;
 extern "C" {
 #endif
 
+#ifdef _RELEASE_VERSION_
 void *OS_Malloc(size_t size);
 void  OS_Free(void* p_mem);
+#else
+#define OS_Free free
+#define OS_Malloc malloc
+#endif
 
 OSMutex_t OS_MutexCreate();
 void  OS_MutexDestroy(OSMutex_t mutex);

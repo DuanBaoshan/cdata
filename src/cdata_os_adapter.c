@@ -9,9 +9,10 @@
 #include "cdata_os_adapter.h"
 
 #ifndef _DEBUG_LEVEL_
-#define _DEBUG_LEVEL_  2
+#define _DEBUG_LEVEL_  _DEBUG_LEVEL_I_
 #endif
 #include "debug.h"
+
 
 /*=============================================================================*
  *                        Macro definition
@@ -39,6 +40,7 @@ typedef struct
  /*=============================================================================*
   *                    Outer function implemention
   *============================================================================*/
+#ifdef _RELEASE_VERSION_
 void *OS_Malloc(size_t size)
 {
     return malloc(size);
@@ -51,6 +53,7 @@ void  OS_Free(void* p_mem)
         free(p_mem);
     }
 }
+#endif
 
 
 OSMutex_t OS_MutexCreate()
@@ -194,18 +197,17 @@ int OS_CondTimedWait(OSCond_t cond, CdataTime_t timeoutMs)
         curTime.tv_nsec = curTime.tv_nsec % 1000000000;
     }
 
-    errno = 0;
     ret = pthread_cond_timedwait(&p_cond->cond, TO_MUTEX(p_cond->mutex), &curTime);
     if (ret != 0)
     {
-        if (errno == ETIMEDOUT)
+        if (ret == ETIMEDOUT)
         {
             ret = ERR_TIME_OUT;
         }
         else
         {
             ret = ERR_FAIL;
-            LOG_E("Fail to timed wait, error:%d, '%s'.\n", errno, strerror(errno));
+            LOG_E("Fail to timed wait, error:%d, '%s'.\n", ret, strerror(ret));
         }
     }
     else
@@ -229,7 +231,7 @@ int OS_CondUnlock(OSCond_t cond)
     CHECK_PARAM(cond != NULL, ERR_BAD_PARAM);
 
     OSCond_st* p_cond = TO_COND(cond);
-    return OS_MutexLock(p_cond->mutex);
+    return OS_MutexUnlock(p_cond->mutex);
 
 }
 

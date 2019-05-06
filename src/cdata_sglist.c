@@ -35,7 +35,7 @@ Date:2019.4.1
 #include "cdata_sglist.h"
 
 #ifndef _DEBUG_LEVEL_
-#define _DEBUG_LEVEL_  2
+#define _DEBUG_LEVEL_  _DEBUG_LEVEL_I_
 #endif
 #include "debug.h"
 
