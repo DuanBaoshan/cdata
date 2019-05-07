@@ -66,7 +66,7 @@ typedef struct
  *                    Inner function declaration
  *============================================================================*/
 static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataSize, QueueValueCp_fn valueCpFn);
-static void ListTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse);
+static void QueueTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse);
 static void CheckIfNeedNotifyCondSignal(Queue_st *p_queue);
 /*=============================================================================*
  *                    Outer function implemention
@@ -152,24 +152,6 @@ int Queue_Push2Head(Queue_t queue, void *p_data)
     return ERR_OK;
 }
 
-int Queue_Pop(Queue_t queue)
-{
-    CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
-    Queue_st *p_queue = TO_QUEUE(queue);
-
-    int ret = List_RmHead(p_queue->list);
-    if (ret != ERR_OK)
-    {
-        LOG_E("Fail to pop queue.\n");
-        return ERR_FAIL;
-    }
-
-    OS_CondLock(p_queue->cond);
-    p_queue->empty = (List_Count(p_queue->list) == 0) ? CDATA_TRUE : CDATA_FALSE;
-    OS_CondUnlock(p_queue->cond);
-
-    return ERR_OK;
-}
 int Queue_GetHead(Queue_t queue, void* p_headData)
 {
     CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
@@ -201,6 +183,25 @@ int Queue_GetHead(Queue_t queue, void* p_headData)
     List_UnLock(p_queue->list);
 
     return ret;
+}
+
+int Queue_Pop(Queue_t queue)
+{
+    CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
+    Queue_st *p_queue = TO_QUEUE(queue);
+
+    int ret = List_RmHead(p_queue->list);
+    if (ret != ERR_OK)
+    {
+        LOG_E("Fail to pop queue.\n");
+        return ERR_FAIL;
+    }
+
+    OS_CondLock(p_queue->cond);
+    p_queue->empty = (List_Count(p_queue->list) == 0) ? CDATA_TRUE : CDATA_FALSE;
+    OS_CondUnlock(p_queue->cond);
+
+    return ERR_OK;
 }
 
 int Queue_WaitDataReady(Queue_t queue)
@@ -246,7 +247,7 @@ int Queue_Traverse(Queue_t queue, void*p_userData, QueueTraverse_fn traverseFn)
 
     userData.p_userData = p_userData;
     userData.traverseFn = traverseFn;
-    return List_Traverse(p_queue->list, &userData, ListTraverseFn);
+    return List_Traverse(p_queue->list, &userData, QueueTraverseFn);
 }
 
 int Queue_Clear(Queue_t queue)
@@ -284,7 +285,7 @@ static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataS
     }
 
     memset(p_queue, 0, sizeof(Queue_st));
-    p_queue->empty = CDATA_FALSE;
+    p_queue->empty = CDATA_TRUE;
     p_queue->valueCpFn = valueCpFn;
 
     p_queue->cond = OS_CondCreate();
@@ -311,7 +312,6 @@ static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataS
         ret = ERR_BAD_PARAM;
     }
 
-
     if (ret != ERR_OK)
     {
         LOG_E("Fail to create list for queue:'%s'.\n", name);
@@ -324,7 +324,7 @@ static Queue_t CreateQueue(QueueName_t name, List_DataType_e dataType, int dataS
     return (Queue_t)p_queue;
 }
 
-static void ListTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)
+static void QueueTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)
 {
     if(p_nodeInfo == NULL)
     {

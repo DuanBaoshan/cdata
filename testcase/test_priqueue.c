@@ -34,13 +34,13 @@ static Queue_t CreateStructurePointerQueue();
 static int CpMessage(void *p_queueData, void *p_userData);
 static void FreeMessage(void *p_message);
 static void ShowMsgQueue(Queue_t queue);
-static void TraverseMsgQueue(QueueTraverseDataInfo_t *p_queueData, void* p_userData);
+static void TraverseMsgQueue(PriQueueTraverseDataInfo_t *p_queueData, void* p_userData);
 
 
 //=============================================================================
-TestcaseSet_t QueueTestcaseSet =
+TestcaseSet_t PriQueueTestcaseSet =
 {
-    "Test all queue functions.",
+    "Test all pri_queue functions.",
     Init,
     Show,
     Run,
@@ -50,10 +50,10 @@ TestcaseSet_t QueueTestcaseSet =
 
 static Testcase_t g_testcaseArray[] =
 {
-    {"Test all the basic functions of queue.", TestBasicFunction},
-    {"Test structure data queue.", TestStructureData},
-    {"Test value reference queue.", TestStructureRef},
-    {"Test multi thread, writing/reading a same queue.", TestMultiThread},
+    {"Test all the basic functions of pri_queue.", TestBasicFunction},
+    {"Test structure data pri_queue.", TestStructureData},
+    {"Test value reference pri_queue.", TestStructureRef},
+    {"Test multi thread, writing/reading a same pri_queue.", TestMultiThread},
     {"Test timed wait in multi thread.", TestTimedMultiThread},
 };
 
@@ -105,10 +105,10 @@ static void Finalize(void)
 }
 
 //=============================================================================
-static void TraverseIntQueue(QueueTraverseDataInfo_t *p_queueData, void* p_userData)
+static void TraverseIntQueue(PriQueueTraverseDataInfo_t *p_queueData, void* p_userData)
 {
     int *p_data = (int*)p_queueData->p_data;
-    printf("%d:%d\n", (int)p_queueData->index, *p_data);
+    printf("%d, value:%d, priority:%d.\n", (int)p_queueData->index, *p_data, p_queueData->priority);
 }
 
 static int CopyIntValue(void *p_queueData, void* p_userData)
@@ -132,8 +132,8 @@ static int CopyIntValue(void *p_queueData, void* p_userData)
 
 static int ShowIntQueue(Queue_t queue)
 {
-    printf("\n==================%s=======================\n", Queue_Name(queue));
-    Queue_Traverse(queue, NULL, TraverseIntQueue);
+    printf("\n==================%s=======================\n", PriQueue_Name(queue));
+    PriQueue_Traverse(queue, NULL, TraverseIntQueue);
     printf("=======================================================\n");
 
     return 0;
@@ -141,42 +141,38 @@ static int ShowIntQueue(Queue_t queue)
 
 static int TestBasicFunction()
 {
+    int priority = 0;
     Queue_t intQueue;
-    Queue_Create("IntValueQueue", sizeof(int), CopyIntValue, &intQueue);
+    PriQueue_Create("IntValueQueue", sizeof(int), CopyIntValue, &intQueue);
 
-    printf("==>Success to create queue:'%s'.\n", Queue_Name(intQueue));
+    printf("==>Success to create queue:'%s'.\n", PriQueue_Name(intQueue));
 
     int value = 0;
 
-    printf("\n==>Will test push and push2head.\n");
-    for (value = 1; value < 5; value++)
+    printf("\n==>Will test push.\n");
+    for (value = 1; value < 10; value++)
     {
-        Queue_Push(intQueue, &value);
-    }
-    printf("\n==>After push, count:%d, elements:", (int)Queue_Count(intQueue));
-    ShowIntQueue(intQueue);
+        priority = random() % 100;
 
-    for (value = 5; value < 10; value++)
-    {
-        Queue_Push2Head(intQueue, &value);
+        printf("Will push, value:%d, priority:%d.\n", value, priority);
+        PriQueue_Push(intQueue, &value, priority);
     }
-
-    printf("\n==>After push 2 head, count:%d, elements:", (int)Queue_Count(intQueue));
+    printf("\n==>After push, count:%d, elements:", (int)PriQueue_Count(intQueue));
     ShowIntQueue(intQueue);
 
     printf("\n==>Will test pop.\n");
-    while (Queue_Count(intQueue) > 3)
+    while (PriQueue_Count(intQueue) > 3)
     {
-        Queue_GetHead(intQueue, &value);
-        printf("Pop queue head data:%d.\n", value);
+        PriQueue_GetHead(intQueue, &value, &priority);
+        printf("Pop queue head data:%d, priority:%d.\n", value, priority);
 
-        Queue_Pop(intQueue);
+        PriQueue_Pop(intQueue);
     }
 
-    Queue_Clear(intQueue);
-    LOG_A("After clear, queue count:%d.\n",(int)Queue_Count(intQueue));
+    PriQueue_Clear(intQueue);
+    LOG_A("After clear, queue count:%d.\n",(int)PriQueue_Count(intQueue));
 
-    Queue_Destroy(intQueue);
+    PriQueue_Destroy(intQueue);
     return 0;
 }
 
@@ -187,18 +183,19 @@ static int TestStructureData()
     queue = CreateStructureQueue();
     ShowMsgQueue(queue);
 
-    while (Queue_Count(queue) > 0)
+    printf("\n==>Will test pop:\n");
+    while (PriQueue_Count(queue) > 0)
     {
         Message_t msg;
 
-        Queue_GetHead(queue, &msg);
-        printf("Pop structure head:'%s'.", msg.p_message);
+        PriQueue_GetHead(queue, &msg, NULL);
+        printf("Pop structure head:'%s'.\n", msg.p_message);
         OS_Free(msg.p_message);
 
-        Queue_Pop(queue);
+        PriQueue_Pop(queue);
     }
 
-    Queue_Destroy(queue);
+    PriQueue_Destroy(queue);
 
     return 0;
 }
@@ -210,18 +207,19 @@ static int TestStructureRef()
     queue = CreateStructurePointerQueue();
     ShowMsgQueue(queue);
 
-    while (Queue_Count(queue) > 0)
+    printf("\n==>Will pop:\n");
+    while (PriQueue_Count(queue) > 0)
     {
         Message_t msg;
 
-        Queue_GetHead(queue, &msg);
-        printf("Pop structure pointer head:'%s'.", msg.p_message);
+        PriQueue_GetHead(queue, &msg, NULL);
+        printf("Pop structure pointer head:'%s'.\n", msg.p_message);
         OS_Free(msg.p_message);
 
-        Queue_Pop(queue);
+        PriQueue_Pop(queue);
     }
 
-    Queue_Destroy(queue);
+    PriQueue_Destroy(queue);
 
     return 0;
 }
@@ -233,23 +231,17 @@ static void* WriteDataThread(void *p_param)
     int i = 0;
     Message_t msg;
     char msgStr[128];
+    int  priority = 0;
 
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 30; i++)
     {
         memset(msgStr, 0, sizeof(msgStr));
         sprintf(msgStr, "Msg-%d", i);
         InitMsgData(msgStr, &msg);
+        priority = random() % 3;
 
-        if ((i % 3) == 0)
-        {
-            printf("Write:Push to back:'%s'.\n", msg.p_message);
-            Queue_Push(queue, &msg);
-        }
-        else
-        {
-            printf("Write:Push to head:'%s'.\n", msg.p_message);
-            Queue_Push2Head(queue, &msg);
-        }
+        printf("Write:Push to back:'%s', priority:%d.\n", msg.p_message, priority);
+        PriQueue_Push(queue, &msg, priority);
 
         sleep(1);
     }
@@ -267,21 +259,29 @@ static void* ReadDataThread(void *p_param)
     int i = 0;
     Message_t msg;
 
-    for (i = 0; i < 12; i++)
+    for (i = 0; i < 1200; i++)
     {
-        ret = Queue_WaitDataReady(queue);
+        ret = PriQueue_WaitDataReady(queue);
         if (ret == ERR_OK)
         {
-            if (Queue_GetHead(queue, &msg) == ERR_OK)
+            ShowMsgQueue(queue);
+            if (PriQueue_GetHead(queue, &msg, NULL) == ERR_OK)
             {
-                Queue_Pop(queue);
+                PriQueue_Pop(queue);
 
-                printf("==>Read():Data ready, head is:'%s'.\n", msg.p_message);
+                printf("==>Read():Data ready, pop head:'%s'.\n\n", msg.p_message);
                 OS_Free(msg.p_message);
+
+                if (i > 4)
+                {
+                    sleep(2);
+                }
             }
 
             if (g_writeDataFinished)
             {
+                LOG_A("Queue count:%d.\n", PriQueue_Count(queue));
+                ShowMsgQueue(queue);
                 break;
             }
         }
@@ -301,8 +301,8 @@ static int TestMultiThread()
 
     Queue_t queue;
     Message_t msg;
-	Queue_Create("WaitQueue", sizeof(Message_t), CpMessage, &queue);
-    Queue_SetFreeFunc(queue, FreeMessage);
+	PriQueue_Create("WaitQueue", sizeof(Message_t), CpMessage, &queue);
+    PriQueue_SetFreeFunc(queue, FreeMessage);
 
     g_writeDataFinished = 0;
 	pthread_create(&id1, NULL, ReadDataThread, &queue);
@@ -313,12 +313,12 @@ static int TestMultiThread()
     {
         LOG_A("Push the last data.\n");
         InitMsgData("LastData", &msg);
-        Queue_Push(queue, &msg);
+        PriQueue_Push(queue, &msg, 12);
     }
 
 	pthread_join(id1, NULL);
 
-    Queue_Destroy(queue);
+    PriQueue_Destroy(queue);
     return 0;
 }
 
@@ -342,12 +342,13 @@ static void* TimedReadDataThread(void *p_param)
             waitTimeout = 2000;
         }
 
-        ret = Queue_TimedWaitDataReady(queue, waitTimeout);
+        ret = PriQueue_TimedWaitDataReady(queue, waitTimeout);
         if (ret == ERR_OK)
         {
-            if (Queue_GetHead(queue, &msg) == ERR_OK)
+            ShowMsgQueue(queue);
+            if (PriQueue_GetHead(queue, &msg, NULL) == ERR_OK)
             {
-                Queue_Pop(queue);
+                PriQueue_Pop(queue);
 
                 printf("==>Read():Data ready, head is:'%s'.\n", msg.p_message);
                 OS_Free(msg.p_message);
@@ -358,7 +359,7 @@ static void* TimedReadDataThread(void *p_param)
             LOG_E("Time out:%d ms.\n", (int)waitTimeout);
         }
 
-        if (g_writeDataFinished && (Queue_Count(queue) == 0))
+        if (g_writeDataFinished && (PriQueue_Count(queue) == 0))
         {
             break;
         }
@@ -375,8 +376,8 @@ static int TestTimedMultiThread()
 	pthread_t id2;
 
     Queue_t queue;
-	Queue_Create("TimedWaitQueue", sizeof(Message_t), CpMessage, &queue);
-    Queue_SetFreeFunc(queue, FreeMessage);
+	PriQueue_Create("TimedWaitQueue", sizeof(Message_t), CpMessage, &queue);
+    PriQueue_SetFreeFunc(queue, FreeMessage);
 
     g_writeDataFinished = 0;
 	pthread_create(&id1, NULL, TimedReadDataThread, &queue);
@@ -385,7 +386,7 @@ static int TestTimedMultiThread()
     pthread_join(id2, NULL);
 	pthread_join(id1, NULL);
 
-    Queue_Destroy(queue);
+    PriQueue_Destroy(queue);
     return 0;
 }
 
@@ -421,15 +422,16 @@ static Queue_t CreateStructureQueue()
     Message_t msg;
     int i = 0;
 
-    Queue_Create("StructureDataQueue", sizeof(Message_t), CpMessage, &queue);
-    Queue_SetFreeFunc(queue, FreeMessage);
+    PriQueue_Create("StructureDataQueue", sizeof(Message_t), CpMessage, &queue);
+    PriQueue_SetFreeFunc(queue, FreeMessage);
 
     for (i = 0; i < 10; i++)
     {
         memset(msgStr, 0, sizeof(msgStr));
         sprintf(msgStr, "Msg-%d", i);
         InitMsgData(msgStr, &msg);
-        Queue_Push(queue, &msg);
+
+        PriQueue_Push(queue, &msg, (i % 3));
     }
 
     return queue;
@@ -443,15 +445,15 @@ static Queue_t CreateStructurePointerQueue()
     Message_t *p_msg;
     int i = 0;
 
-    Queue_CreateRef("StructurePointerQueue", CpMessage, &queue);
-    Queue_SetFreeFunc(queue, FreeMessage);
+    PriQueue_CreateRef("StructurePointerQueue", CpMessage, &queue);
+    PriQueue_SetFreeFunc(queue, FreeMessage);
 
     for (i = 0; i < 10; i++)
     {
         memset(msgStr, 0, sizeof(msgStr));
         sprintf(msgStr, "Pointer-%d", i);
         p_msg = CreateMsg(msgStr);
-        Queue_Push(queue, p_msg);
+        PriQueue_Push(queue, p_msg, random() % 20);
     }
 
     return queue;
@@ -490,17 +492,17 @@ static void FreeMessage(void *p_message)
 
 static void ShowMsgQueue(Queue_t queue)
 {
-    printf("\n==================%s=======================\n", Queue_Name(queue));
-    Queue_Traverse(queue, NULL, TraverseMsgQueue);
-    printf("==========================================================\n");
+    printf("\n==================%s=======================\n", PriQueue_Name(queue));
+    PriQueue_Traverse(queue, NULL, TraverseMsgQueue);
+    printf("==========================================================\n\n");
 }
 
-static void TraverseMsgQueue(QueueTraverseDataInfo_t *p_queueData, void* p_userData)
+static void TraverseMsgQueue(PriQueueTraverseDataInfo_t *p_queueData, void* p_userData)
 {
     ASSERT(p_queueData != NULL);
 
     Message_t *p_data = (Message_t*)p_queueData->p_data;
-    printf("%d, msg:'%s'.\n", (int)p_queueData->index, p_data->p_message);
+    printf("%d, msg:'%s', priority:%d.\n", (int)p_queueData->index, p_data->p_message, p_queueData->priority);
 
     return;
 }

@@ -6,7 +6,6 @@ INCLUDE_DIRS := -I./include -I./ -I./src -I./testcase
 CXXFLAGS :=
 CCFLAGS :=
 
-
 CXX := g++
 CC := gcc
 ECHO := echo

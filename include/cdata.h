@@ -37,5 +37,6 @@ Date:2019.4.2
 #include "cdata_types.h"
 #include "cdata_list.h"
 #include "cdata_queue.h"
+#include "cdata_priqueue.h"
 
 #endif

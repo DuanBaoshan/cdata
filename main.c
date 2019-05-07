@@ -14,6 +14,7 @@
 //=============================================================================
 extern TestcaseSet_t ListTestcaseSet;
 extern TestcaseSet_t QueueTestcaseSet;
+extern TestcaseSet_t PriQueueTestcaseSet;
 
 //=============================================================================
 static void ShowRootMenu(List_t rootMenuList);
@@ -36,6 +37,7 @@ int main(int argc, char* argv[])
     List_SetFreeDataFunc(testcaseList, FreeData);
     List_InsertData(testcaseList, &ListTestcaseSet);
     List_InsertData(testcaseList, &QueueTestcaseSet);
+    List_InsertData(testcaseList, &PriQueueTestcaseSet);
 
     while (1)
     {

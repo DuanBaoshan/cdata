@@ -53,8 +53,10 @@ int Queue_SetFreeFunc(Queue_t queue, QueueFreeData_fn freeFn);
 
 int Queue_Push(Queue_t queue, void *p_data);
 int Queue_Push2Head(Queue_t queue, void *p_data);
-int  Queue_Pop(Queue_t queue);
+
 int  Queue_GetHead(Queue_t queue, void* p_headData);
+int  Queue_Pop(Queue_t queue);
+
 
 int Queue_WaitDataReady(Queue_t queue);
 int Queue_TimedWaitDataReady(Queue_t queue, CdataTime_t timeOutMs);
