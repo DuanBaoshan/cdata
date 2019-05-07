@@ -163,61 +163,20 @@ int PriQueue_Push(Queue_t queue, void *p_data, int priority)
         return ERR_FAIL;
     }
 
-    if (List_Count(p_queue->list) == 0)
-    {
-        if (List_InsertData(p_queue->list, p_queueData) == NULL)
-        {
-            ret = ERR_FAIL;
-            LOG_E("Fail to insert data to the queue:'%s'.\n", PriQueue_Name(queue));
-        }
-    }
-    else
-    {
-        p_queueNode = (PriQueueData_t*)List_GetHeadData(p_queue->list);
-        if (priority > p_queueNode->priority)
-        {
-            if (List_InsertData2Head(p_queue->list, p_queueData) == NULL)
-            {
-                LOG_E("Fail to insert data to queue('%s') head.\n", PriQueue_Name(queue));
-                ret = ERR_FAIL;
-            }
-        }
-        else
-        {
-            ListNode_t listNode = List_GetLastMatchNodeByCond(p_queue->list, p_queueData, UserPriorityLtNode);
-            if (listNode != NULL)
-            {
-                if (List_InsertDataAfter(p_queue->list, listNode, p_queueData) == NULL)
-                {
-                    LOG_E("Fail to insert data after queue('%s') node.\n", PriQueue_Name(queue));
-                    ret = ERR_FAIL;
-                }
-            }
-            else
-            {
-                if (List_InsertData2Head(p_queue->list, p_queueData) == NULL)
-                {
-                    LOG_E("Fail to insert data to queue('%s') head.\n", PriQueue_Name(queue));
-                    ret = ERR_FAIL;
-                }
-            }
-        }
-    }
-
-    if (ret != ERR_OK)
+    if (List_InsertDataDescently(p_queue->list,  p_queueData) == NULL)
     {
         LOG_E("Fail to insert data.\n");
 
         /*If push fail, we need destroy p_queueData, but the user data we cann't destroy.*/
         p_queueData->p_data = NULL;
         DestroyQueueData(p_queue, p_queueData);
-    }
-    else
-    {
-        CheckIfNeedNotifyCondSignal(p_queue);
+
+        return ERR_FAIL;
     }
 
-    return ret;
+    CheckIfNeedNotifyCondSignal(p_queue);
+
+    return ERR_OK;
 }
 
 int PriQueue_GetHead(Queue_t queue, void* p_headData, int *p_priority)
@@ -389,7 +348,7 @@ static Queue_t CreatePriQueue(QueueName_t name, List_DataType_e dataType, int da
         return NULL;
     }
 
-    ret = List_CreateRef(name, LIST_TYPE_DOUBLE_LINK, &p_queue->list);
+    ret = List_CreateRef(name, LIST_TYPE_SINGLE_LINK, &p_queue->list);
     if (ret != ERR_OK)
     {
         LOG_E("Fail to create list for queue:'%s'.\n", name);
@@ -398,6 +357,8 @@ static Queue_t CreatePriQueue(QueueName_t name, List_DataType_e dataType, int da
         OS_Free(p_queue);
         return NULL;
     }
+
+    List_SetUserLtNodeFunc(p_queue->list, UserPriorityLtNode);
 
     return (Queue_t)p_queue;
 }
@@ -472,8 +433,6 @@ CdataBool UserPriorityLtNode(void* p_nodeData, void* p_userData)
     }
 
     return ((PriQueueData_t*)p_nodeData)->priority >= ((PriQueueData_t*)p_userData)->priority;
-
-
 }
 
 static void PriQueueTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)

@@ -280,7 +280,7 @@ static void* ReadDataThread(void *p_param)
 
             if (g_writeDataFinished)
             {
-                LOG_A("Queue count:%d.\n", PriQueue_Count(queue));
+                LOG_A("Queue count:%d.\n", (int)PriQueue_Count(queue));
                 ShowMsgQueue(queue);
                 break;
             }
