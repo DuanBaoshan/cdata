@@ -172,6 +172,25 @@ static int TestBasicFunction()
     PriQueue_Clear(intQueue);
     LOG_A("After clear, queue count:%d.\n",(int)PriQueue_Count(intQueue));
 
+    printf("Will test all node has the same priority.\n");
+    for (value = 1; value < 10; value++)
+    {
+        priority = 10;
+        printf("Will push, value:%d, priority:%d.\n", value, priority);
+        PriQueue_Push(intQueue, &value, priority);
+    }
+    printf("\n==>After push, count:%d, elements:", (int)PriQueue_Count(intQueue));
+    ShowIntQueue(intQueue);
+
+    printf("\n==>Will test pop.\n");
+    while (PriQueue_Count(intQueue) > 0)
+    {
+        PriQueue_GetHead(intQueue, &value, &priority);
+        printf("Pop queue head data:%d, priority:%d.\n", value, priority);
+
+        PriQueue_Pop(intQueue);
+    }
+
     PriQueue_Destroy(intQueue);
     return 0;
 }

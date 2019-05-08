@@ -86,7 +86,6 @@ CdataBool UserPriorityLtNode(void* p_nodeData, void* p_userData);
 
 
 static void PriQueueTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse);
-static void CheckIfNeedNotifyCondSignal(PriQueue_st *p_queue);
 /*=============================================================================*
  *                    Outer function implemention
  *============================================================================*/
@@ -121,6 +120,16 @@ int PriQueue_CreateRef(QueueName_t name, PriQueueValueCp_fn valueCpFn, Queue_t* 
     return ERR_OK;
 }
 
+int PriQueue_SetFreeFunc(Queue_t queue, PriQueueFreeData_fn freeFn)
+{
+    CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
+
+    PriQueue_st *p_queue = TO_PRIQUEUE(queue);
+    p_queue->freeFn = freeFn;
+
+    return ERR_OK;
+}
+
 const char* PriQueue_Name(Queue_t queue)
 {
     CHECK_PARAM(queue != NULL, NULL);
@@ -135,16 +144,6 @@ CdataCount_t PriQueue_Count(Queue_t queue)
     PriQueue_st *p_queue = TO_PRIQUEUE(queue);
 
     return List_Count(p_queue->list);
-}
-
-int PriQueue_SetFreeFunc(Queue_t queue, PriQueueFreeData_fn freeFn)
-{
-    CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
-
-    PriQueue_st *p_queue = TO_PRIQUEUE(queue);
-    p_queue->freeFn = freeFn;
-
-    return ERR_OK;
 }
 
 int PriQueue_Push(Queue_t queue, void *p_data, int priority)
@@ -174,7 +173,10 @@ int PriQueue_Push(Queue_t queue, void *p_data, int priority)
         return ERR_FAIL;
     }
 
-    CheckIfNeedNotifyCondSignal(p_queue);
+    OS_CondLock(p_queue->cond);
+    p_queue->empty = CDATA_FALSE;
+    OS_CondSignal(p_queue->cond);
+    OS_CondUnlock(p_queue->cond);
 
     return ERR_OK;
 }
@@ -461,22 +463,6 @@ static void PriQueueTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userD
 
     return;
 }
-
-static void CheckIfNeedNotifyCondSignal(PriQueue_st *p_queue)
-{
-    ASSERT(p_queue != NULL);
-
-    OS_CondLock(p_queue->cond);
-    p_queue->empty = (List_Count(p_queue->list) > 0) ? CDATA_FALSE : CDATA_TRUE;
-    if (!p_queue->empty)
-    {
-        OS_CondSignal(p_queue->cond);
-    }
-    OS_CondUnlock(p_queue->cond);
-
-    return;
-}
-
 
 /*=============================================================================*
  *                                End of file

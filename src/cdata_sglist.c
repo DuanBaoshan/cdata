@@ -159,6 +159,7 @@ int SGList_InsertNodeAscently(List_t list, ListNode_t node)
     List_st*       p_list = CONVERT_2_LIST(list);
 	SGListNode_st* p_node = CONVERT_2_SGLIST_NODE(node);
 	SGListNode_st* p_head = NULL;
+    SGListNode_st* p_tail = NULL;
 	void*		   p_userData = NULL;
 
 	SGListNode_st* p_pre = NULL;
@@ -177,10 +178,15 @@ int SGList_InsertNodeAscently(List_t list, ListNode_t node)
 
 	p_userData = p_node->p_data;
 	p_head = CONVERT_2_SGLIST_NODE(p_list->p_head);
-
 	if (p_list->usrLtNodeFn(p_head->p_data, p_userData))
 	{
 		return SGList_InsertNode2Head(list, node);
+	}
+
+	p_tail = CONVERT_2_SGLIST_NODE(p_list->p_tail);
+	if (!p_list->usrLtNodeFn(p_tail->p_data, p_userData))
+	{
+		return SGList_InsertNode(list, node);
 	}
 
 	if (p_list->nodeCount == 1)
@@ -207,6 +213,7 @@ int SGList_InsertNodeDescently(List_t list, ListNode_t node)
     List_st*       p_list = CONVERT_2_LIST(list);
 	SGListNode_st* p_node = CONVERT_2_SGLIST_NODE(node);
 	SGListNode_st* p_head = NULL;
+    SGListNode_st* p_tail = NULL;
 	void*		   p_userData = NULL;
 
 	SGListNode_st* p_pre = NULL;
@@ -225,11 +232,16 @@ int SGList_InsertNodeDescently(List_t list, ListNode_t node)
 
 	p_userData = p_node->p_data;
 	p_head = CONVERT_2_SGLIST_NODE(p_list->p_head);
-
 	if (!p_list->usrLtNodeFn(p_head->p_data, p_userData))
 	{
 		return SGList_InsertNode2Head(list, node);
 	}
+
+    p_tail = CONVERT_2_SGLIST_NODE(p_list->p_tail);
+    if (p_list->usrLtNodeFn(p_tail->p_data, p_userData))
+    {
+        return SGList_InsertNode(list, node);
+    }
 
 	if (p_list->nodeCount == 1)
 	{

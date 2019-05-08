@@ -54,21 +54,19 @@ typedef void (*PriQueueTraverse_fn)(PriQueueTraverseDataInfo_t *p_queueData, voi
 int PriQueue_Create(QueueName_t name, int dataSize, PriQueueValueCp_fn valueCpFn, Queue_t* p_queue);
 int PriQueue_CreateRef(QueueName_t name, PriQueueValueCp_fn valueCpFn, Queue_t* p_queue);
 
+int PriQueue_SetFreeFunc(Queue_t queue, PriQueueFreeData_fn freeFn);
+
 const char*  PriQueue_Name(Queue_t queue);
 CdataCount_t PriQueue_Count(Queue_t queue);
 
-int PriQueue_SetFreeFunc(Queue_t queue, PriQueueFreeData_fn freeFn);
-
-int PriQueue_Push(Queue_t queue, void *p_data, int priority);
-
+int  PriQueue_Push(Queue_t queue, void *p_data, int priority);
 int  PriQueue_GetHead(Queue_t queue, void* p_headData, int* p_priority);
 int  PriQueue_Pop(Queue_t queue);
-
 
 int PriQueue_WaitDataReady(Queue_t queue);
 int PriQueue_TimedWaitDataReady(Queue_t queue, CdataTime_t timeOutMs);
 
-int PriQueue_Traverse(Queue_t queue, void*p_userData, PriQueueTraverse_fn traverseFn);
+int PriQueue_Traverse(Queue_t queue, void* p_userData, PriQueueTraverse_fn traverseFn);
 
 int PriQueue_Clear(Queue_t queue);
 int PriQueue_Destroy(Queue_t queue);
