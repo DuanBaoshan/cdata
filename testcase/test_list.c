@@ -299,6 +299,13 @@ static int TestSimpleList()
     int value = 0;
     CdataCount_t count = 10;
 
+    LOG_A("Will test NULL usrLtNodeFn");
+    List_SetUserLtNodeFunc(g_normalList, NULL);
+    List_InsertDataAscently(g_normalList, &value);
+    List_InsertDataDescently(g_normalList, &value);
+
+    LOG_A("Will test List_InsertData.\n");
+    List_SetUserLtNodeFunc(g_normalList, IntLtListData);
     for (i = 0; i < count; i++)
     {
         value = i + 1;
@@ -326,7 +333,7 @@ static int TestSimpleList()
 	List_Clear(g_normalList);
 
 	//Test List_InsertDataAscently
-    LOG_A("Will test inserting normal data ascently.\n");
+    LOG_A("Will test inserting random data ascently.\n");
 	count = 10;
     for (i = 0; i < count; i++)
     {
@@ -336,8 +343,19 @@ static int TestSimpleList()
 	ShowIntList(g_normalList);
 	List_Clear(g_normalList);
 
+	//Test List_InsertDataAscently, data self ascent.
+    LOG_A("Will test inserting data ascently, the data is self ascent.\n");
+	count = 10;
+    for (i = 0; i < count; i++)
+    {
+        value = i;
+        List_InsertDataAscently(g_normalList, &value);
+    }
+	ShowIntList(g_normalList);
+	List_Clear(g_normalList);
+
 	//Test List_InsertDataDescently
-    LOG_A("Will test inserting normal data descently.\n");
+    LOG_A("Will test inserting random data descently.\n");
 	count = 10;
     for (i = 0; i < count; i++)
     {
@@ -345,6 +363,18 @@ static int TestSimpleList()
         List_InsertDataDescently(g_normalList, &value);
     }
     ShowIntList(g_normalList);
+    List_Clear(g_normalList);
+
+	//Test List_InsertDataDescently, data self is descent.
+    LOG_A("Will test inserting data descently, data self is descent.\n");
+	count = 10;
+    for (i = 0; i < count; i++)
+    {
+        value = count - i;
+        List_InsertDataDescently(g_normalList, &value);
+    }
+    ShowIntList(g_normalList);
+    List_Clear(g_normalList);
 
     //Test match data
     LOG_A("Will test data exists.\n");

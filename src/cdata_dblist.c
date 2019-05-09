@@ -160,6 +160,23 @@ int   DBList_InsertNodeAscently(List_t list, ListNode_t node)
     DBListNode_st*  p_newNode = CONVERT_2_DBLIST_NODE(node);
 	DBListNode_st*  p_node    = NULL;
 
+    if (p_list->usrLtNodeFn == NULL)
+    {
+        LOG_E("usrLtNodeFn is NULL.\n");
+        return ERR_FAIL;
+    }
+
+    if (p_list->nodeCount > 0)
+    {
+        DBListNode_st *p_tail = CONVERT_2_DBLIST_NODE(p_list->p_tail);
+
+        if (!p_list->usrLtNodeFn(p_tail->p_data, p_newNode->p_data))
+        {
+            Insert2Tail(p_list, p_newNode);
+            return ERR_OK;
+        }
+    }
+
     for (p_node = p_list->p_head; p_node != NULL; p_node = p_node->p_next)
     {
         if (p_list->usrLtNodeFn(p_node->p_data, p_newNode->p_data))
@@ -182,6 +199,23 @@ int   DBList_InsertNodeDescently(List_t list, ListNode_t node)
     List_st*        p_list    = CONVERT_2_LIST(list);
     DBListNode_st*  p_newNode = CONVERT_2_DBLIST_NODE(node);
 	DBListNode_st*  p_node    = NULL;
+
+    if (p_list->usrLtNodeFn == NULL)
+    {
+        LOG_E("usrLtNodeFn is NULL.\n");
+        return ERR_FAIL;
+    }
+
+    if (p_list->nodeCount > 0)
+    {
+        DBListNode_st *p_tail = CONVERT_2_DBLIST_NODE(p_list->p_tail);
+
+        if (p_list->usrLtNodeFn(p_tail->p_data, p_newNode->p_data))
+        {
+            Insert2Tail(p_list, p_newNode);
+            return ERR_OK;
+        }
+    }
 
     for (p_node = p_list->p_head; p_node != NULL; p_node = p_node->p_next)
     {

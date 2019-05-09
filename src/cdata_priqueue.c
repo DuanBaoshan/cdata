@@ -151,9 +151,7 @@ int PriQueue_Push(Queue_t queue, void *p_data, int priority)
     CHECK_PARAM(queue != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(p_data != NULL, ERR_BAD_PARAM);
 
-    int ret = ERR_OK;
     PriQueue_st *p_queue = TO_PRIQUEUE(queue);
-    PriQueueData_t *p_queueNode = NULL;
 
     PriQueueData_t *p_queueData = CreateQueueData(p_queue, p_data, priority);
     if (p_queueData == NULL)
