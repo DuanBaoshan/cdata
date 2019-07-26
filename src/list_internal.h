@@ -15,22 +15,23 @@ typedef enum
 
 typedef struct _List_
 {
-	ListType_e	   		type;
+	ListType_e	   		    type;
 
-    void* 				p_head;
-    void* 				p_tail;
+    void* 				    p_head;
+    void* 				    p_tail;
 
-    List_DataType_e 	dataType;
-    int 				dataLength;
+    List_DataType_e 	    dataType;
+    int 				    dataLength;
 
-    OSMutex_t 			guard;
-	ListEqual_fn		equalFn;
-	ListFreeData_fn 	freeFn;
-	ListUserLtNode_fn   usrLtNodeFn;
-	ListIsDuplicate_fn	isDuplicateFn;
+    OSMutex_t 			    guard;
+    List_FreeData_fn 	    freeFn;
+	List_Equal2Keyword_fn   equal2KeywordFn;
+	List_NodeEqual_fn       nodeEqualFn;
+	
+	List_UserLtNode_fn      usrLtNodeFn;
 
-    CdataCount_t 		nodeCount;
-    ListName_t 		name;
+    CdataCount_t 		    nodeCount;
+    ListName_t 		        name;
 }List_st;
 
 typedef struct _DBListNode_s

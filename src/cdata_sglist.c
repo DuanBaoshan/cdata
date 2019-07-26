@@ -60,7 +60,7 @@ Date:2019.4.1
  *                    Inner function declaration
  *============================================================================*/
 static void InsertFirstNode(List_st *p_list, SGListNode_st *p_node);
-
+static void InsertAfter(List_st *p_list, SGListNode_st *p_listNode, SGListNode_st *p_newNode);
 /*=============================================================================*
  *                    Outer function implemention
  *============================================================================*/
@@ -105,6 +105,61 @@ int SGList_CreateNode(List_t list, void* p_data, ListNode_t* p_node)
 
     *p_node = p_newNode;
     return ERR_OK;
+}
+
+int SGList_InsertDataBefore(List_t list, void* p_keyword, ListNode_t newNode)
+{
+	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(p_keyword != NULL, ERR_BAD_PARAM);
+    
+    List_st*       p_list = CONVERT_2_LIST(list);
+	SGListNode_st* p_head = NULL;
+	SGListNode_st* p_pre = NULL;
+	SGListNode_st* p_cur = NULL;
+
+    if (p_list->nodeCount == 0)
+    {
+    	LOG_E("Not find list node to insert before.\n");
+	    return ERR_DATA_NOT_EXISTS;
+    }
+    
+    p_head = CONVERT_2_SGLIST_NODE(p_list->p_head);
+	if (p_list->equal2KeywordFn(p_head->p_data, p_keyword))
+	{
+		return SGList_InsertNode2Head(list, newNode);
+	}    
+	
+	for (p_pre = p_head, p_cur = (SGListNode_st*)p_pre->p_next; p_cur != NULL; p_pre = p_cur, p_cur = (SGListNode_st*)p_cur->p_next)
+	{
+		if (p_list->equal2KeywordFn(p_cur->p_data, p_keyword))
+		{
+			return SGList_InsertNodeAfter(list, p_pre, newNode);
+		}
+	}
+
+	LOG_E("Not find list node to insert before.\n");
+
+	return ERR_DATA_NOT_EXISTS;    
+}
+
+int SGList_InsertDataAfter(List_t list,  void* p_keyword, ListNode_t newNode)
+{
+	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(p_keyword != NULL, ERR_BAD_PARAM);
+    
+    List_st*       p_list = CONVERT_2_LIST(list);
+    SGListNode_st* p_head = NULL;  
+    
+    for (p_head = (SGListNode_st*)p_list->p_head; p_head != NULL; p_head = (SGListNode_st*)p_head->p_next)
+    {
+        if (p_list->equal2KeywordFn(p_head->p_data, p_keyword))
+        {
+            InsertAfter(p_list, p_head, (SGListNode_st*)newNode);
+            return ERR_OK;
+        }
+    }
+
+    return ERR_DATA_NOT_EXISTS;
 }
 
 int SGList_InsertNode(List_t list, ListNode_t node)
@@ -270,11 +325,17 @@ int SGList_InsertNodeBefore(List_t list, ListNode_t listNode, ListNode_t newNode
 	SGListNode_st* p_pre = NULL;
 	SGListNode_st* p_cur = NULL;
 
+    if (p_list->nodeCount == 0)
+    {
+    	LOG_E("Not find list node to insert before.\n");
+	    return ERR_DATA_NOT_EXISTS;
+    }
+    
 	if (listNode == p_list->p_head)
 	{
 		return SGList_InsertNode2Head(list, newNode);
 	}
-
+    
 	p_head = CONVERT_2_SGLIST_NODE(p_list->p_head);
 	for (p_pre = p_head, p_cur = (SGListNode_st*)p_pre->p_next; p_cur != NULL; p_pre = p_cur, p_cur = (SGListNode_st*)p_cur->p_next)
 	{
@@ -286,7 +347,7 @@ int SGList_InsertNodeBefore(List_t list, ListNode_t listNode, ListNode_t newNode
 
 	LOG_E("Not find list node to insert before.\n");
 
-	return ERR_BAD_PARAM;
+	return ERR_DATA_NOT_EXISTS;
 }
 
 int SGList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode)
@@ -298,16 +359,14 @@ int SGList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode)
 	List_st*       p_list = CONVERT_2_LIST(list);
 	SGListNode_st* p_listNode = CONVERT_2_SGLIST_NODE(listNode);
 	SGListNode_st* p_newNode = CONVERT_2_SGLIST_NODE(newNode);
+    
+    if (p_list->nodeCount == 0)
+    {
+    	LOG_E("Not find list node to insert after.\n");
+	    return ERR_DATA_NOT_EXISTS;
+    }
 
-	p_newNode->p_next  = p_listNode->p_next;
-	p_listNode->p_next = (ListNode_t)p_newNode;
-
-	if (p_newNode->p_next == NULL)
-	{
-		p_list->p_tail = p_newNode;
-	}
-
-	p_list->nodeCount++;
+    InsertAfter(p_list, p_listNode, p_newNode);
 
 	return ERR_OK;
 }
@@ -376,6 +435,25 @@ static void InsertFirstNode(List_st *p_list, SGListNode_st *p_node)
 	p_list->nodeCount++;
 
 	return;
+}
+
+static void InsertAfter(List_st *p_list, SGListNode_st *p_listNode, SGListNode_st *p_newNode)
+{
+	ASSERT(p_list != NULL);
+	ASSERT(p_listNode != NULL);
+	ASSERT(p_newNode != NULL);
+
+	p_newNode->p_next  = p_listNode->p_next;
+	p_listNode->p_next = (ListNode_t)p_newNode;
+
+	if (p_newNode->p_next == NULL)
+	{
+		p_list->p_tail = p_newNode;
+	}
+
+	p_list->nodeCount++;
+	
+	return;	
 }
 
 /*=============================================================================*

@@ -39,13 +39,6 @@ typedef struct
 	int englishScore;
 }Student_t;
 
-typedef struct
-{
-	char name[64];
-	char sex;
-	int age;
-}StudentKeyword_t;
-
 //=========================================================================
 static int InitList(ListType_e listType);
 static int DestroyList();
@@ -171,7 +164,7 @@ static int InitList(ListType_e listType)
         return -1;
     }
 	List_SetUserLtNodeFunc(g_normalList, IntLtListData);
-    List_SetEqualFunc(g_normalList, IntEqualListData);
+    List_SetEqual2KeywordFunc(g_normalList, IntEqualListData);
 
 
     ret = List_CreateRef("StudentList", listType, &g_studentList);
@@ -183,8 +176,8 @@ static int InitList(ListType_e listType)
 
 	List_SetFreeDataFunc(g_studentList, FreeStudentData);
 	List_SetUserLtNodeFunc(g_studentList, SortedByTotalScore);
-    List_SetEqualFunc(g_studentList, StudentIsEqual);
-    List_SetDuplicateFunc(g_studentList, StudentIsDuplicate);
+    List_SetEqual2KeywordFunc(g_studentList, StudentIsEqual);
+    List_SetNodeEqualFunc(g_studentList, StudentIsDuplicate);
 
 	return 0;
 }
@@ -405,7 +398,7 @@ static int TestSimpleList()
         LOG_A("%d not exists.\n", value);
     }
 
-    List_GetMachCount(g_normalList, &value, &count);
+    count = List_GetMachCount(g_normalList, &value);
     LOG_A("The count of value(%d) in the list is:%d.\n", value, (int)count);
 
     List_RmAllMatchNodes(g_normalList, &value);
@@ -668,9 +661,9 @@ CdataBool StudentIsEqual(void* p_listNodeData, void* p_userData)
     }
 
     Student_t*        p_student = (Student_t*)p_listNodeData;
-    StudentKeyword_t* p_keyword = (StudentKeyword_t*)p_userData;
+    Student_t*        p_keyword = (Student_t*)p_userData;
 
-    return ((strcmp(p_student->p_name, p_keyword->name) == 0)
+    return ((strcmp(p_student->p_name, p_keyword->p_name) == 0)
              && (p_student->age == p_keyword->age)
              && (p_student->sex == p_keyword->sex)
             );
@@ -903,6 +896,7 @@ static int TestNormalStructureList()
 static int TestReferenceList()
 {
 	Student_t* p_student = NULL;
+	Student_t keyword;
 
 	CreateStudentList();
 	ShowStudentList(g_studentList);
@@ -916,7 +910,7 @@ static int TestReferenceList()
 
 	// Test List_GetMachCount
 	CdataCount_t count = 0;
-	List_GetMachCountByCond(g_studentList, &condition, FindJohn, &count);
+	count = List_GetMachCountByCond(g_studentList, &condition, FindJohn);
 	LOG_A("Find boys with name '%s', count:%d.\n", condition.name, (int)count);
 
 	//Test List_DataExistsByCond
@@ -947,14 +941,17 @@ static int TestReferenceList()
 		p_student = (Student_t *)List_GetNodeData(g_studentList, node);
 		LOG_A("Find John's information: chineseScore:%d, math:%d, english:%d.\n", p_student->chineseScore, p_student->mathScore, p_student->englishScore);
 	}
-
+    
+    keyword.p_name = "Tom";
+    keyword.sex = 'M';
+    keyword.age = 10;
 	p_student = CreateStudent("BeforeStu", 'M', 12, 80, 98, 90);
-	List_InsertDataBefore(g_studentList, node, p_student);
+	List_InsertDataBefore(g_studentList, &keyword, p_student);
 	LOG_A("After insert before:\n");
 	ShowStudentList(g_studentList);
 
 	p_student = CreateStudent("AfterStu", 'M', 13, 89, 70, 94);
-	List_InsertDataAfter(g_studentList, node, p_student);
+	List_InsertDataAfter(g_studentList, &keyword, p_student);
 	LOG_A("After insert after:\n");
 	ShowStudentList(g_studentList);
 
@@ -1094,32 +1091,32 @@ static int TestMatchByData()
         List_DestroyNode(g_studentList, node);
     }
 
-    StudentKeyword_t keyword;
-    memset(&keyword, 0, sizeof(StudentKeyword_t));
-    strcpy(keyword.name, "John");
+    Student_t keyword;
+    memset(&keyword, 0, sizeof(Student_t));
+    keyword.p_name = "John";
     keyword.sex = 'M';
     keyword.age = 11;
     if (List_DataExists(g_studentList, &keyword))
     {
-        LOG_A("Student(name:'%s', sex:'%c', age:%d) exists.\n", keyword.name, keyword.sex, keyword.age);
+        LOG_A("Student(name:'%s', sex:'%c', age:%d) exists.\n", keyword.p_name, keyword.sex, keyword.age);
     }
 
-    memset(&keyword, 0, sizeof(StudentKeyword_t));
-    strcpy(keyword.name, "JackJack");
+    memset(&keyword, 0, sizeof(Student_t));
+    keyword.p_name = "JackJack";
     keyword.sex = 'M';
     keyword.age = 11;
     if (!List_DataExists(g_studentList, &keyword))
     {
-        LOG_A("Student(name:'%s', sex:'%c', age:%d) not exists.\n", keyword.name, keyword.sex, keyword.age);
+        LOG_A("Student(name:'%s', sex:'%c', age:%d) not exists.\n", keyword.p_name, keyword.sex, keyword.age);
     }
 
     CdataCount_t count = 0;
-    memset(&keyword, 0, sizeof(StudentKeyword_t));
-    strcpy(keyword.name, "Jack");
+    memset(&keyword, 0, sizeof(Student_t));
+    keyword.p_name = "Jack";
     keyword.sex = 'M';
     keyword.age = 11;
-    List_GetMachCount(g_studentList, &keyword, &count);
-    LOG_A("There are %d students with same info(name:%s, sex:'%c', age:%d).\n", (int)count, keyword.name, keyword.sex, keyword.age);
+    count = List_GetMachCount(g_studentList, &keyword);
+    LOG_A("There are %d students with same info(name:%s, sex:'%c', age:%d).\n", (int)count, keyword.p_name, keyword.sex, keyword.age);
 
     int i = 0;
     int totalScore = 0;
@@ -1181,11 +1178,11 @@ static int TestMatchByCond()
 	ShowStudentList(g_studentList);
 
 
-    List_GetMachCountByCond(g_studentList, &sex, FindBySex, &count);
+    count = List_GetMachCountByCond(g_studentList, &sex, FindBySex);
     LOG_A("There are %d students with sex:'%c'.\n", (int)count, sex);
 
     sex = 'F';
-    List_GetMachCountByCond(g_studentList, &sex, FindBySex, &count);
+    count = List_GetMachCountByCond(g_studentList, &sex, FindBySex);
     LOG_A("There are %d students with sex:'%c'.\n", (int)count, sex);
 
 

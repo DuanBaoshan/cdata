@@ -105,7 +105,7 @@ int List_CreateRef(ListName_t name, ListType_e type, List_t* p_list)
     return ERR_OK;
 }
 
-int List_SetFreeDataFunc(List_t list, ListFreeData_fn freeFn)
+int List_SetFreeDataFunc(List_t list, List_FreeData_fn freeFn)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 
@@ -115,32 +115,32 @@ int List_SetFreeDataFunc(List_t list, ListFreeData_fn freeFn)
 	return ERR_OK;
 }
 
-int List_SetEqualFunc(List_t list, ListEqual_fn equalFn)
+int List_SetEqual2KeywordFunc(List_t list, List_Equal2Keyword_fn equal2KeywordFn)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 
 	List_st* p_list = CONVERT_2_LIST(list);
-	p_list->equalFn = equalFn;
+	p_list->equal2KeywordFn = equal2KeywordFn;
 
 	return ERR_OK;
 }
 
-int List_SetUserLtNodeFunc(List_t list, ListUserLtNode_fn userLtNodeFn)
+int List_SetNodeEqualFunc(List_t list, List_NodeEqual_fn nodeEqualFn)
+{
+	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
+
+	List_st* p_list = CONVERT_2_LIST(list);
+	p_list->nodeEqualFn = nodeEqualFn;
+
+	return ERR_OK;
+}
+
+int List_SetUserLtNodeFunc(List_t list, List_UserLtNode_fn userLtNodeFn)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 
 	List_st* p_list = CONVERT_2_LIST(list);
 	p_list->usrLtNodeFn = userLtNodeFn;
-
-	return ERR_OK;
-}
-
-int List_SetDuplicateFunc(List_t list, ListIsDuplicate_fn isDuplicateFn)
-{
-	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-
-	List_st* p_list = CONVERT_2_LIST(list);
-	p_list->isDuplicateFn = isDuplicateFn;
 
 	return ERR_OK;
 }
@@ -201,7 +201,7 @@ void List_UnLock(List_t list)
 	return;
 }
 
-int List_Traverse(List_t list, void *p_userData, ListTraverse_fn traverseFn)
+int List_Traverse(List_t list, void *p_userData, List_Traverse_fn traverseFn)
 {
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(traverseFn != NULL, ERR_BAD_PARAM);
@@ -229,7 +229,7 @@ int List_Traverse(List_t list, void *p_userData, ListTraverse_fn traverseFn)
     return ERR_OK;
 }
 
-int List_TraverseReversely(List_t list, void *p_userData, ListTraverse_fn traverseFn)
+int List_TraverseReversely(List_t list, void *p_userData, List_Traverse_fn traverseFn)
 {
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(traverseFn != NULL, ERR_BAD_PARAM);
@@ -327,6 +327,10 @@ ListNode_t List_InsertData(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
+		
+		/*If insert failed, we cannot free the user's raw data, we only can destroy the new created node,
+		 *so we should detach node data first.*/
+		List_DetachNodeData(list, node);
 		List_DestroyNode(list, node);
 		return NULL;
 	}
@@ -353,6 +357,8 @@ ListNode_t List_InsertData2Head(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
+		
+		List_DetachNodeData(list, node);
 		List_DestroyNode(list, node);
 		return NULL;
 	}
@@ -379,6 +385,8 @@ ListNode_t List_InsertDataAscently(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
+		
+		List_DetachNodeData(list, node);
 		List_DestroyNode(list, node);
 		return NULL;
 	}
@@ -405,6 +413,8 @@ ListNode_t List_InsertDataDescently(List_t list, void* p_data)
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
+		
+		List_DetachNodeData(list, node);
 		List_DestroyNode(list, node);
 		return NULL;
 	}
@@ -468,47 +478,68 @@ ListNode_t List_InsertData2HeadUniquely(List_t list, void* p_data)
 	return node;
 }
 
-ListNode_t List_InsertDataBefore(List_t list, ListNode_t node, void *p_data)
+ListNode_t List_InsertDataBefore(List_t list, void* p_keyword, void *p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(node != NULL, NULL);
+	CHECK_PARAM(p_keyword != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
 
 	ListNode_t newNode = NULL;
 
 	List_Lock(list);
-	newNode = List_InsertDataBeforeNL(list, node, p_data);
+	newNode = List_InsertDataBeforeNL(list, p_keyword, p_data);
 	List_UnLock(list);
 
 	return newNode;
 }
-ListNode_t List_InsertDataBeforeNL(List_t list, ListNode_t node, void *p_data)
+ListNode_t List_InsertDataBeforeNL(List_t list, void* p_keyword, void *p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_keyword != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
 
 	int        ret     = ERR_OK;
 	ListNode_t newNode = NULL;
-
+    List_st*  p_list = CONVERT_2_LIST(list);
+    
+	if (p_list->equal2KeywordFn == NULL)
+	{
+		LOG_E("equal2KeywordFn is NULL, pls set a valid function first.\n");
+		return NULL;
+	}
+	
 	ret = List_CreateNode(list, p_data, &newNode);
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to create node.\n");
 		return NULL;
 	}
-
-	ret = List_InsertNodeBeforeNL(list, node, newNode);
-	if (ret != ERR_OK)
-	{
-		LOG_E("Fail to insert node.\n");
+    
+    if (p_list->type == LIST_TYPE_DOUBLE_LINK)
+    {
+        ret = DBList_InsertDataBefore(list, p_keyword, newNode);
+    }
+    else if (p_list->type == LIST_TYPE_SINGLE_LINK)
+    {
+        ret = SGList_InsertDataBefore(list, p_keyword, newNode);
+    }
+    else
+    {
+        LOG_E("Invalid list type:%d.\n", p_list->type);
+        ret = ERR_FAIL;
+    }
+    
+    if (ret != ERR_OK)
+    {        
+        List_DetachNodeData(list, newNode);
 		List_DestroyNode(list, newNode);
-		return NULL;
-	}
+		return NULL;    
+    }
 
 	return newNode;
 }
 
-ListNode_t List_InsertDataAfter(List_t list, ListNode_t node, void *p_data)
+ListNode_t List_InsertDataAfter(List_t list, void* p_keyword, void *p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
@@ -516,33 +547,54 @@ ListNode_t List_InsertDataAfter(List_t list, ListNode_t node, void *p_data)
 	ListNode_t newNode = NULL;
 
 	List_Lock(list);
-	newNode = List_InsertDataAfterNL(list, node, p_data);
+	newNode = List_InsertDataAfterNL(list, p_keyword, p_data);
 	List_UnLock(list);
 
 	return newNode;
 }
-ListNode_t List_InsertDataAfterNL(List_t list, ListNode_t node, void *p_data)
+ListNode_t List_InsertDataAfterNL(List_t list, void* p_keyword, void *p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
+    CHECK_PARAM(p_keyword != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
 
-	int      ret    = ERR_OK;
+	int        ret     = ERR_OK;
 	ListNode_t newNode = NULL;
-
+    List_st*  p_list = CONVERT_2_LIST(list);
+    
+	if (p_list->equal2KeywordFn == NULL)
+	{
+		LOG_E("equal2KeywordFn is NULL, pls set a valid function first.\n");
+		return NULL;
+	}
+	
 	ret = List_CreateNode(list, p_data, &newNode);
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to create node.\n");
 		return NULL;
 	}
-
-	ret = List_InsertNodeAfterNL(list, node, newNode);
-	if (ret != ERR_OK)
-	{
-		LOG_E("Fail to insert node.\n");
+    
+    if (p_list->type == LIST_TYPE_DOUBLE_LINK)
+    {
+        ret = DBList_InsertDataAfter(list, p_keyword, newNode);
+    }
+    else if (p_list->type == LIST_TYPE_SINGLE_LINK)
+    {
+        ret = SGList_InsertDataAfter(list, p_keyword, newNode);
+    }
+    else
+    {
+        LOG_E("Invalid list type:%d.\n", p_list->type);
+        ret = ERR_FAIL;
+    }
+    
+    if (ret != ERR_OK)
+    {        
+        List_DetachNodeData(list, newNode);
 		List_DestroyNode(list, newNode);
-		return NULL;
-	}
+		return NULL;    
+    }
 
 	return newNode;
 }
@@ -566,6 +618,8 @@ ListNode_t List_InsertDataAtPos(List_t list, void* p_data, CdataIndex_t posIndex
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
+		
+		List_DetachNodeData(list, node);
 		List_DestroyNode(list, node);
 		return NULL;
 	}
@@ -573,18 +627,18 @@ ListNode_t List_InsertDataAtPos(List_t list, void* p_data, CdataIndex_t posIndex
 	return node;
 }
 
-CdataBool List_DataExists(List_t list, void* p_userData)
+CdataBool List_DataExists(List_t list, void* p_keyword)
 {
 	CHECK_PARAM(list != NULL, CDATA_FALSE);
-	CHECK_PARAM(p_userData != NULL, CDATA_FALSE);
+	CHECK_PARAM(p_keyword != NULL, CDATA_FALSE);
 
 	CdataBool ret    = CDATA_FALSE;
 	List_st*  p_list = CONVERT_2_LIST(list);
 	void*     p_head = NULL;
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid function first.\n");
 		return CDATA_FALSE;
 	}
 
@@ -592,7 +646,7 @@ CdataBool List_DataExists(List_t list, void* p_userData)
 	for (p_head = p_list->p_head; p_head != NULL; p_head = List_GetNextNodeNL(list, p_head))
 	{
 		void *p_data = List_GetNodeDataNL(list, p_head);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_keyword))
 		{
 			ret = CDATA_TRUE;
 			break;
@@ -603,7 +657,7 @@ CdataBool List_DataExists(List_t list, void* p_userData)
 	return ret;
 }
 
-CdataBool List_DataExistsByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+CdataBool List_DataExistsByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, CDATA_FALSE);
     CHECK_PARAM(conditionFn != NULL, CDATA_FALSE);
@@ -711,43 +765,40 @@ void* List_GetTailDataNL(List_t list)
 	return p_data;
 }
 
-int List_GetMachCount(List_t list, void* p_userData, CdataCount_t* p_count)
+CdataCount_t List_GetMachCount(List_t list, void* p_keyword)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(p_userData != NULL, ERR_BAD_PARAM);
-	CHECK_PARAM(p_count != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, 0);
+    CHECK_PARAM(p_keyword != NULL, 0);
 
 	List_st* 	 p_list = CONVERT_2_LIST(list);
 	void *	 	 p_head = NULL;
 	void *		 p_data = NULL;
 	CdataCount_t count  = 0;
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
-		return ERR_BAD_PARAM;
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
+		return 0;
 	}
 
 	List_Lock(list);
 	for (p_head = p_list->p_head; p_head != NULL; p_head = List_GetNextNodeNL(list, p_head))
 	{
 		p_data = List_GetNodeDataNL(list, p_head);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_keyword))
 		{
 			count++;
 		}
 	}
 	List_UnLock(list);
 
-	*p_count = count;
-	return ERR_OK;
+	return count;
 }
 
-int List_GetMachCountByCond(List_t list, void* p_userData, ListCondition_fn conditionFn, CdataCount_t* p_count)
+CdataCount_t List_GetMachCountByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
-    CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
-    CHECK_PARAM(conditionFn != NULL, ERR_BAD_PARAM);
-	CHECK_PARAM(p_count != NULL, ERR_BAD_PARAM);
+    CHECK_PARAM(list != NULL, 0);
+    CHECK_PARAM(conditionFn != NULL, 0);
 
 	List_st* 	 p_list = CONVERT_2_LIST(list);
 	void *	 	 p_head = NULL;
@@ -765,22 +816,21 @@ int List_GetMachCountByCond(List_t list, void* p_userData, ListCondition_fn cond
 	}
 	List_UnLock(list);
 
-	*p_count = count;
-	return ERR_OK;
+	return count;
 }
 
-void* List_GetData(List_t list, void* p_userData)
+void* List_GetData(List_t list, void* p_keyword)
 {
 	CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(p_userData != NULL, NULL);
+	CHECK_PARAM(p_keyword != NULL, NULL);
 
 	List_st* p_list = CONVERT_2_LIST(list);
 	void *	 	 p_head = NULL;
 	void *		 p_data = NULL;
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return NULL;
 	}
 
@@ -788,7 +838,7 @@ void* List_GetData(List_t list, void* p_userData)
 	for (p_head = p_list->p_head; p_head != NULL; p_head = List_GetNextNodeNL(list, p_head))
 	{
 		p_data = List_GetNodeDataNL(list, p_head);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_keyword))
 		{
 			break;
 		}
@@ -797,7 +847,7 @@ void* List_GetData(List_t list, void* p_userData)
 
 	return p_data;
 }
-void* List_GetDataByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+void* List_GetDataByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
 	CHECK_PARAM(list != NULL, NULL);
 	CHECK_PARAM(conditionFn != NULL, NULL);
@@ -843,16 +893,16 @@ void* List_GetDataAtPos(List_t list, CdataIndex_t posIndex)
 	return p_data;
 }
 
-void* List_DetachData(List_t list, void* p_userData)
+void* List_DetachData(List_t list, void* p_keyword)
 {
 	CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(p_userData != NULL, NULL);
+	CHECK_PARAM(p_keyword != NULL, NULL);
 
 	int        ret    = ERR_OK;
 	ListNode_t node   = NULL;
 	void*      p_data = NULL;
 
-	node = List_DetachNodeByData(list, p_userData);
+	node = List_DetachNodeByKey(list, p_keyword);
 	if (node == NULL)
 	{
 		LOG_E("Node is NULL.\n");
@@ -868,7 +918,7 @@ void* List_DetachData(List_t list, void* p_userData)
 
 	return p_data;
 }
-void* List_DetachDataByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+void* List_DetachDataByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
 	CHECK_PARAM(list != NULL, NULL);
 	CHECK_PARAM(conditionFn != NULL, NULL);
@@ -1153,9 +1203,9 @@ int List_InsertNodeUniquely(List_t list, ListNode_t node)
 	int ret          = ERR_OK;
 	List_st* p_list  = CONVERT_2_LIST(list);
 
-	if (p_list->isDuplicateFn == NULL)
+	if (p_list->nodeEqualFn == NULL)
 	{
-		LOG_E("isDuplicateFn is NULL, pls set a valid isDuplicateFn first.\n");
+		LOG_E("nodeEqualFn is NULL, pls set a valid function first.\n");
 		return ERR_BAD_PARAM;
 	}
 
@@ -1181,9 +1231,9 @@ int List_InsertNode2HeadUniquely(List_t list, ListNode_t node)
 	int ret          = ERR_OK;
 	List_st* p_list  = CONVERT_2_LIST(list);
 
-	if (p_list->isDuplicateFn == NULL)
+	if (p_list->nodeEqualFn == NULL)
 	{
-		LOG_E("isDuplicateFn is NULL, pls set a valid isDuplicateFn first.\n");
+		LOG_E("nodeEqualFn is NULL, pls set a valid function first.\n");
 		return ERR_BAD_PARAM;
 	}
 
@@ -1543,9 +1593,9 @@ ListNode_t List_GetFirstMatchNode(List_t list, void* p_userData)
 
 	List_st* p_list = CONVERT_2_LIST(list);
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return NULL;
 	}
 
@@ -1553,7 +1603,7 @@ ListNode_t List_GetFirstMatchNode(List_t list, void* p_userData)
 	for (p_node = List_GetHeadNL(list); p_node != NULL; p_node = List_GetNextNodeNL(list, p_node))
 	{
 		p_data = List_GetNodeDataNL(list, p_node);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_userData))
 		{
 			break;
 		}
@@ -1573,9 +1623,9 @@ ListNode_t List_GetNextMatchNode(List_t list, ListNode_t startNode, void* p_user
 	List_st* p_list = CONVERT_2_LIST(list);
 
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return NULL;
 	}
 
@@ -1583,7 +1633,7 @@ ListNode_t List_GetNextMatchNode(List_t list, ListNode_t startNode, void* p_user
 	for (p_node = startNode; p_node != NULL; p_node = List_GetNextNodeNL(list, p_node))
 	{
 		p_data = List_GetNodeDataNL(list, p_node);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_userData))
 		{
 			break;
 		}
@@ -1608,9 +1658,9 @@ ListNode_t List_GetLastMatchNode(List_t list, void* p_userData)
 		return NULL;
 	}
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return NULL;
 	}
 
@@ -1618,7 +1668,7 @@ ListNode_t List_GetLastMatchNode(List_t list, void* p_userData)
 	for (p_node = List_GetTailNL(list); p_node != NULL; p_node = List_GetPreNodeNL(list, p_node))
 	{
 		p_data = List_GetNodeDataNL(list, p_node);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_userData))
 		{
 			break;
 		}
@@ -1643,9 +1693,9 @@ ListNode_t List_GetPreMatchNode(List_t list, ListNode_t startNode, void* p_userD
 		return NULL;
 	}
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return NULL;
 	}
 
@@ -1653,7 +1703,7 @@ ListNode_t List_GetPreMatchNode(List_t list, ListNode_t startNode, void* p_userD
 	for (p_node = startNode; p_node != NULL; p_node = List_GetPreNodeNL(list, p_node))
 	{
 		p_data = List_GetNodeDataNL(list, p_node);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_userData))
 		{
 			break;
 		}
@@ -1663,7 +1713,7 @@ ListNode_t List_GetPreMatchNode(List_t list, ListNode_t startNode, void* p_userD
 	return p_node;
 }
 
-ListNode_t List_GetFirstMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+ListNode_t List_GetFirstMatchNodeByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(conditionFn != NULL, NULL);
@@ -1685,7 +1735,7 @@ ListNode_t List_GetFirstMatchNodeByCond(List_t list, void* p_userData, ListCondi
 	return p_node;
 }
 
-ListNode_t List_GetNextMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn)
+ListNode_t List_GetNextMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, List_Condition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(conditionFn != NULL, NULL);
@@ -1707,7 +1757,7 @@ ListNode_t List_GetNextMatchNodeByCond(List_t list, ListNode_t startNode, void* 
 	return p_node;
 }
 
-ListNode_t List_GetLastMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+ListNode_t List_GetLastMatchNodeByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(conditionFn != NULL, NULL);
@@ -1736,7 +1786,7 @@ ListNode_t List_GetLastMatchNodeByCond(List_t list, void* p_userData, ListCondit
 	return p_node;
 }
 
-ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, ListCondition_fn conditionFn)
+ListNode_t List_GetPreMatchNodeByCond(List_t list, ListNode_t startNode, void* p_userData, List_Condition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(conditionFn != NULL, NULL);
@@ -1909,18 +1959,18 @@ ListNode_t List_DetachNodeAtPos(List_t list, CdataIndex_t posIndex)
 	return p_node;
 }
 
-ListNode_t List_DetachNodeByData(List_t list, void* p_userData)
+ListNode_t List_DetachNodeByKey(List_t list, void* p_keyword)
 {
     CHECK_PARAM(list != NULL, NULL);
-	CHECK_PARAM(p_userData != NULL, NULL);
+	CHECK_PARAM(p_keyword != NULL, NULL);
 
 	List_st* p_list = CONVERT_2_LIST(list);
 	void*    p_node = NULL;
 	void*	 p_data = NULL;
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return NULL;
 	}
 
@@ -1933,7 +1983,7 @@ ListNode_t List_DetachNodeByData(List_t list, void* p_userData)
 			continue;
 		}
 
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_keyword))
 		{
 			List_DetachNodeNL(list, p_node);
 			break;
@@ -1943,7 +1993,7 @@ ListNode_t List_DetachNodeByData(List_t list, void* p_userData)
 
 	return p_node;
 }
-ListNode_t List_DetachNodeByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+ListNode_t List_DetachNodeByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
     CHECK_PARAM(list != NULL, NULL);
 	CHECK_PARAM(conditionFn != NULL, NULL);
@@ -2092,9 +2142,9 @@ int List_RmFirstMatchNode(List_t list, void* p_userData)
 	void*    p_data = NULL;
 	CdataBool found = CDATA_FALSE;
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return ERR_BAD_PARAM;
 	}
 
@@ -2102,7 +2152,7 @@ int List_RmFirstMatchNode(List_t list, void* p_userData)
 	for (p_node = p_list->p_head; p_node != NULL; p_node = List_GetNextNodeNL(list, p_node))
 	{
 		p_data = List_GetNodeDataNL(list, p_node);
-		if (p_list->equalFn(p_data, p_userData))
+		if (p_list->equal2KeywordFn(p_data, p_userData))
 		{
 			found = CDATA_TRUE;
 			break;
@@ -2127,7 +2177,7 @@ int List_RmFirstMatchNode(List_t list, void* p_userData)
 
 	return ERR_OK;
 }
-int List_RmFirstMatchNodeByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+int List_RmFirstMatchNodeByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 	CHECK_PARAM(conditionFn != NULL, ERR_BAD_PARAM);
@@ -2180,9 +2230,9 @@ CdataCount_t List_RmAllMatchNodes(List_t list, void* p_userData)
 	CdataBool found = CDATA_FALSE;
 	CdataCount_t count = 0;
 
-	if (p_list->equalFn == NULL)
+	if (p_list->equal2KeywordFn == NULL)
 	{
-		LOG_E("equalFn is NULL, pls set a valid equalFn first.\n");
+		LOG_E("equal2KeywordFn is NULL, pls set a valid equal2KeywordFn first.\n");
 		return ERR_BAD_PARAM;
 	}
 
@@ -2194,7 +2244,7 @@ CdataCount_t List_RmAllMatchNodes(List_t list, void* p_userData)
 		for (p_node = p_next, found = CDATA_FALSE; p_node != NULL; p_node = List_GetNextNodeNL(list, p_node))
 		{
 			p_data = List_GetNodeDataNL(list, p_node);
-			if (p_list->equalFn(p_data, p_userData))
+			if (p_list->equal2KeywordFn(p_data, p_userData))
 			{
 				found = CDATA_TRUE;
 				count++;
@@ -2225,7 +2275,7 @@ CdataCount_t List_RmAllMatchNodes(List_t list, void* p_userData)
 
 	return count;
 }
-CdataCount_t List_RmAllMatchNodesByCond(List_t list, void* p_userData, ListCondition_fn conditionFn)
+CdataCount_t List_RmAllMatchNodesByCond(List_t list, void* p_userData, List_Condition_fn conditionFn)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 	CHECK_PARAM(conditionFn != NULL, ERR_BAD_PARAM);
@@ -2326,9 +2376,9 @@ List_t  CreateList(ListName_t name, ListType_e type, List_DataType_e dataType, i
     p_newList->guard  = guard;
 
 	p_newList->freeFn = NULL;
-	p_newList->equalFn = NULL;
+	p_newList->equal2KeywordFn = NULL;
 	p_newList->usrLtNodeFn = NULL;
-	p_newList->isDuplicateFn = NULL;
+	p_newList->nodeEqualFn = NULL;
 
     return p_newList;
 }
@@ -2368,7 +2418,7 @@ static CdataBool   HasDuplicateNode(List_t list, ListNode_t node)
 	for (p_node = p_list->p_head; p_node != NULL; p_node = List_GetNextNodeNL(list, p_node))
 	{
 		p_data = List_GetNodeDataNL(list, p_node);
-		if (p_list->isDuplicateFn(p_data, p_userData))
+		if (p_list->nodeEqualFn(p_data, p_userData))
 		{
 			isDuplicate = CDATA_TRUE;
 			break;

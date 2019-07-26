@@ -34,6 +34,9 @@ __BEGIN_EXTERN_C_DECL__
 
 int SGList_CreateNode(List_t list, void* p_data, ListNode_t* p_node);
 
+int SGList_InsertDataBefore(List_t list, void* p_keyword, ListNode_t newNode);
+int SGList_InsertDataAfter(List_t list,  void* p_keyword, ListNode_t newNode);
+
 int SGList_InsertNode(List_t list, ListNode_t node);
 int SGList_InsertNode2Head(List_t list, ListNode_t node);
 

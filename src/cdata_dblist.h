@@ -37,6 +37,9 @@ __BEGIN_EXTERN_C_DECL__
 
 int DBList_CreateNode(List_t list, void* p_data, ListNode_t* p_node);
 
+int DBList_InsertDataBefore(List_t list, void* p_keyword, ListNode_t newNode);
+int DBList_InsertDataAfter(List_t list, void* p_keyword, ListNode_t newNode);
+
 int DBList_InsertNode(List_t list, ListNode_t node);
 int DBList_InsertNode2Head(List_t list, ListNode_t node);
 
