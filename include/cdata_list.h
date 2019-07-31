@@ -44,8 +44,9 @@ So I decide to develop a simple and easily used(I think so at least) list.
 2.When use cdata_list module, you need make some decisions first:
 #.Which kind of list type you want to use, single link and double link?The most functions in cdata_list module 
 are same for the both type of link list, but there are a few functions different for single and double link.
-For example, when you call List_TraverseReversely on a single list, it will fail.Another example is List_DetachNode,
-the time to detach node of double list is O(1), but for the single list it's O(n).
+Firstly, when you call List_TraverseReversely on a single list, it will fail.Secondly, the time to detach node  
+of double list is O(1), but for the single list it's O(n).So if you never use List_TraverseReversely and detach
+node, you can use single link list.  
 
 #.Which kind of data type you want to store, normal data(int, long, float, structure and so on) or pointer.
 For the former, the cdata_list module will allocate a same memory in the node, then memcpy user data to the 

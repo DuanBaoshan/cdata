@@ -19,10 +19,11 @@ You can call all the lock version functions in multi-thread environment safely w
 ### When use cdata_list , you need make some decisions first:  
    1. Which kind of list type you want to use, single link and double link?The most functions in cdata_list  
 are same for the both type of link list, but there are a few functions different for single and double link.
-For example, when you call List_TraverseReversely on a single list, it will fail.Another example is List_DetachNode,
-the time to detach node of double list is O(1), but for the single list it's O(n).  
+Firstly, when you call List_TraverseReversely on a single list, it will fail.Secondly, the time to detach node  
+of double list is O(1), but for the single list it's O(n).So if you never use List_TraverseReversely and detach
+node, you can use single link list.  
    2. Which kind of data type you want to store, normal data(int, long, float, structure and so on) or pointer.
-For the former, the cdata_list  will allocate a same memory in the node, then memcpy user data to the 
+For the former, the cdata_list  will allocate a same size memory in the node, then memcpy user data to the 
 node data, then user can destroy data out of list safely.For the latter, the cdata_list  will store 
 pointer of the user data directly, and user cannot destroy the data when the node is in use.It's like the 
 two ways to send parameter to a function, value copy and value reference.And List_Create is for the former, 
