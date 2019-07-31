@@ -28,26 +28,26 @@ pointer of the user data directly, and user cannot destroy the data when the nod
 two ways to send parameter to a function, value copy and value reference.And List_Create is for the former, 
 List_CreateRef is for the latter.But when you want to store the C++ class object, you only can use List_CreateRef.  
    3. How to free the memory of the node data.If the data you stored has no internal pointer, you can let cdata_list 
-to free the node data safely, for example:
-   ```
+to free the node data safely, for example:   
+```
         struct foo  
-        {
-             int value1;
-             float value2;
-             char value3[256];
-        };  
-   ```   
-         But if there are internal pointer(s) in your data, you need free it by yourself, so you need call List_SetFreeDataFunc
-         to set a customer free function, for example:
-   ``` 
+        {  
+            int value1;  
+            float value2;  
+            char value3[256];  
+        };
+```        
+But if there are internal pointer(s) in your data, you need free it by yourself, so you need call List_SetFreeDataFunc
+to set a customer free function, for example:
+```
         struct foo  
         {  
             int value1;  
             int *p_value2;  
             float *p_value3;  
         };  
-    ```
-         Because cdata_list doesn't know the details of your data, so it cannot free the data correctly.
+```
+Because cdata_list doesn't know the details of your data, so it cannot free the data correctly.
 
 ### About normal and NL functions.  
 The functions without suffix "NL" (e.g. List_GetHead, List_InsertData) will call List_Lock and List_UnLock
