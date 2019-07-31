@@ -168,7 +168,8 @@ static int TestBasicFunction()
 
         PriQueue_Pop(intQueue);
     }
-
+    LOG_A("After pop, queue count:%d.\n",(int)PriQueue_Count(intQueue));
+    
     PriQueue_Clear(intQueue);
     LOG_A("After clear, queue count:%d.\n",(int)PriQueue_Count(intQueue));
 
@@ -436,7 +437,7 @@ static Message_t* CreateMsg(const char* p_msgData)
 static Queue_t CreateStructureQueue()
 {
     Queue_t queue;
-
+    int priority = 0;
     char msgStr[256];
     Message_t msg;
     int i = 0;
@@ -449,8 +450,10 @@ static Queue_t CreateStructureQueue()
         memset(msgStr, 0, sizeof(msgStr));
         sprintf(msgStr, "Msg-%d", i);
         InitMsgData(msgStr, &msg);
-
-        PriQueue_Push(queue, &msg, (i % 3));
+        
+        priority = (i % 7);
+        printf("Push msg:%s, priority:%d.\n", msg.p_message, priority);
+        PriQueue_Push(queue, &msg, priority);
     }
 
     return queue;
@@ -463,6 +466,7 @@ static Queue_t CreateStructurePointerQueue()
     char msgStr[256];
     Message_t *p_msg;
     int i = 0;
+    int priority = 0;
 
     PriQueue_CreateRef("StructurePointerQueue", CpMessage, &queue);
     PriQueue_SetFreeFunc(queue, FreeMessage);
@@ -472,7 +476,10 @@ static Queue_t CreateStructurePointerQueue()
         memset(msgStr, 0, sizeof(msgStr));
         sprintf(msgStr, "Pointer-%d", i);
         p_msg = CreateMsg(msgStr);
-        PriQueue_Push(queue, p_msg, random() % 20);
+        
+        priority = random() % 20;
+        printf("Push msg:%s, priority:%d.\n", p_msg->p_message, priority);
+        PriQueue_Push(queue, p_msg, priority);
     }
 
     return queue;

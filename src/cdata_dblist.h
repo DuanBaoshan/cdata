@@ -43,8 +43,8 @@ int DBList_InsertDataAfter(List_t list, void* p_keyword, ListNode_t newNode);
 int DBList_InsertNode(List_t list, ListNode_t node);
 int DBList_InsertNode2Head(List_t list, ListNode_t node);
 
-int DBList_InsertNodeAscently(List_t list, ListNode_t node);
-int DBList_InsertNodeDescently(List_t list, ListNode_t node);
+int DBList_InsertNodeAsc(List_t list, ListNode_t node);
+int DBList_InsertNodeDes(List_t list, ListNode_t node);
 
 int DBList_InsertNodeBefore(List_t list, ListNode_t listNode, ListNode_t newNode);
 int DBList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode);

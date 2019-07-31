@@ -192,7 +192,7 @@ int DBList_InsertNode2Head(List_t list, ListNode_t node)
     return ERR_OK;
 }
 
-int   DBList_InsertNodeAscently(List_t list, ListNode_t node)
+int   DBList_InsertNodeAsc(List_t list, ListNode_t node)
 {
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
@@ -205,17 +205,6 @@ int   DBList_InsertNodeAscently(List_t list, ListNode_t node)
     {
         LOG_E("usrLtNodeFn is NULL.\n");
         return ERR_FAIL;
-    }
-
-    if (p_list->nodeCount > 0)
-    {
-        DBListNode_st *p_tail = CONVERT_2_DBLIST_NODE(p_list->p_tail);
-
-        if (!p_list->usrLtNodeFn(p_tail->p_data, p_newNode->p_data))
-        {
-            Insert2Tail(p_list, p_newNode);
-            return ERR_OK;
-        }
     }
 
     for (p_node = p_list->p_head; p_node != NULL; p_node = p_node->p_next)
@@ -232,7 +221,7 @@ int   DBList_InsertNodeAscently(List_t list, ListNode_t node)
     return ERR_OK;
 }
 
-int   DBList_InsertNodeDescently(List_t list, ListNode_t node)
+int   DBList_InsertNodeDes(List_t list, ListNode_t node)
 {
     CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
     CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
@@ -245,17 +234,6 @@ int   DBList_InsertNodeDescently(List_t list, ListNode_t node)
     {
         LOG_E("usrLtNodeFn is NULL.\n");
         return ERR_FAIL;
-    }
-
-    if (p_list->nodeCount > 0)
-    {
-        DBListNode_st *p_tail = CONVERT_2_DBLIST_NODE(p_list->p_tail);
-
-        if (p_list->usrLtNodeFn(p_tail->p_data, p_newNode->p_data))
-        {
-            Insert2Tail(p_list, p_newNode);
-            return ERR_OK;
-        }
     }
 
     for (p_node = p_list->p_head; p_node != NULL; p_node = p_node->p_next)

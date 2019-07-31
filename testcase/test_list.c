@@ -294,8 +294,8 @@ static int TestSimpleList()
 
     LOG_A("Will test NULL usrLtNodeFn");
     List_SetUserLtNodeFunc(g_normalList, NULL);
-    List_InsertDataAscently(g_normalList, &value);
-    List_InsertDataDescently(g_normalList, &value);
+    List_InsertDataAsc(g_normalList, &value);
+    List_InsertDataDes(g_normalList, &value);
 
     LOG_A("Will test List_InsertData.\n");
     List_SetUserLtNodeFunc(g_normalList, IntLtListData);
@@ -325,46 +325,46 @@ static int TestSimpleList()
 	ShowIntList(g_normalList);
 	List_Clear(g_normalList);
 
-	//Test List_InsertDataAscently
+	//Test List_InsertDataAsc
     LOG_A("Will test inserting random data ascently.\n");
 	count = 10;
     for (i = 0; i < count; i++)
     {
         value = (random() % 100) + 1;
-        List_InsertDataAscently(g_normalList, &value);
+        List_InsertDataAsc(g_normalList, &value);
     }
 	ShowIntList(g_normalList);
 	List_Clear(g_normalList);
 
-	//Test List_InsertDataAscently, data self ascent.
+	//Test List_InsertDataAsc, data self ascent.
     LOG_A("Will test inserting data ascently, the data is self ascent.\n");
 	count = 10;
     for (i = 0; i < count; i++)
     {
         value = i;
-        List_InsertDataAscently(g_normalList, &value);
+        List_InsertDataAsc(g_normalList, &value);
     }
 	ShowIntList(g_normalList);
 	List_Clear(g_normalList);
 
-	//Test List_InsertDataDescently
+	//Test List_InsertDataDes
     LOG_A("Will test inserting random data descently.\n");
 	count = 10;
     for (i = 0; i < count; i++)
     {
         value = (random() % 100) + 1;
-        List_InsertDataDescently(g_normalList, &value);
+        List_InsertDataDes(g_normalList, &value);
     }
     ShowIntList(g_normalList);
     List_Clear(g_normalList);
 
-	//Test List_InsertDataDescently, data self is descent.
+	//Test List_InsertDataDes, data self is descent.
     LOG_A("Will test inserting data descently, data self is descent.\n");
 	count = 10;
     for (i = 0; i < count; i++)
     {
         value = count - i;
-        List_InsertDataDescently(g_normalList, &value);
+        List_InsertDataDes(g_normalList, &value);
     }
     ShowIntList(g_normalList);
     List_Clear(g_normalList);
@@ -605,14 +605,27 @@ static void FreeStudentData(void* p_data)
 
 	Student_t *p_student = (Student_t*)p_data;
 
-	LOG_I("Free %s.\n", p_student->p_name);
+	LOG_I("Free Student:%s, age:%d, sex:'%c'.\n", p_student->p_name, p_student->age, p_student->sex);
 	free(p_student->p_name);
 	free(p_student);
 
 	return ;
 }
 
-static void ShowStudent(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)
+static void PrintStudent(Student_t *p_student)
+{
+	int total = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
+	printf("Name:%s, \tsex:'%c', \tage:%d, \ttotal:%d, \tchinese:%d, \tmath:%d, \tenglish:%d.\n"
+	        , p_student->p_name
+	        , p_student->sex
+	        , p_student->age
+	        , total
+	        , p_student->chineseScore
+	        , p_student->mathScore
+	        , p_student->englishScore);	
+}
+
+static void TraShowStudent(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)
 {
 	if (p_nodeInfo == NULL)
 	{
@@ -621,8 +634,8 @@ static void ShowStudent(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, Cd
 	}
 
 	Student_t *p_student = (Student_t *)p_nodeInfo->p_data;
-	int total = p_student->chineseScore + p_student->mathScore + p_student->englishScore;
-	printf("Student %d, \tName:%s, \tsex:'%c', \tage:%d, \ttotal:%d, \tchinese:%d, \tmath:%d, \tenglish:%d.\n", (int)(p_nodeInfo->index + 1), p_student->p_name, p_student->sex, p_student->age, total, p_student->chineseScore, p_student->mathScore, p_student->englishScore);
+	printf("Student %lld:\t", p_nodeInfo->index + 1);
+	PrintStudent(p_student);
 
 	return ;
 }
@@ -630,7 +643,7 @@ static void ShowStudent(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, Cd
 static int ShowStudentList(List_t list)
 {
 	printf("====================%s Begin============================\n", List_Name(list));
-	List_Traverse(list, NULL, ShowStudent);
+	List_Traverse(list, NULL, TraShowStudent);
 	printf("====================%s End============================\n\n", List_Name(list));
 	return 0;
 }
@@ -691,9 +704,6 @@ CdataBool StudentIsDuplicate(void* p_firstNodeData, void* p_secondNodeData)
              && (p_first->age == p_second->age)
              && (p_first->sex == p_second->sex)
             );
-
-
-
 }
 
 static int CreateStudentList()
@@ -704,28 +714,28 @@ static int CreateStudentList()
 
 
 	node = CreateStudentNode("Jack", 'M', 11, 78, 82, 67);
-	List_InsertNodeDescently(g_studentList, node);
+	List_InsertNodeDes(g_studentList, node);
 
 	node = CreateStudentNode("Jan", 'F', 10, 90, 96, 80);
-	List_InsertNodeDescently(g_studentList, node);
+	List_InsertNodeDes(g_studentList, node);
 
 	node = CreateStudentNode("Lily", 'F', 10, 87, 76, 80);
-	List_InsertNodeDescently(g_studentList, node);
+	List_InsertNodeDes(g_studentList, node);
 
 	node = CreateStudentNode("Jack", 'M', 10, 89, 93, 78);
-	List_InsertNodeDescently(g_studentList, node);
+	List_InsertNodeDes(g_studentList, node);
 
 	Student_t *p_student = CreateStudent("Alice", 'F', 12, 97, 88, 79);
-	List_InsertDataDescently(g_studentList, p_student);
+	List_InsertDataDes(g_studentList, p_student);
 
 	node = CreateStudentNode("John", 'M', 11, 85, 79, 94);
-	List_InsertNodeDescently(g_studentList, node);
+	List_InsertNodeDes(g_studentList, node);
 
 	p_student = CreateStudent("John", 'M', 12, 62, 74, 76);
-	List_InsertDataDescently(g_studentList, p_student);
+	List_InsertDataDes(g_studentList, p_student);
 
 	p_student = CreateStudent("Tom", 'M', 10, 93, 100, 91);
-	List_InsertDataDescently(g_studentList, p_student);
+	List_InsertDataDes(g_studentList, p_student);
 
 	return 0;
 }
@@ -739,28 +749,28 @@ static int TestInsertUniquely()
 	ShowStudentList(g_studentList);
 
     p_student = CreateStudent("Jack", 'M', 10, 80, 87, 90);
-    if (List_InsertDataUniquely(g_studentList, p_student) == NULL)
+    if (List_InsertDataUni(g_studentList, p_student) == NULL)
     {
         LOG_A("Fail to insert student:'%s', sex:'%c', age:%d, perhaps already exists.\n", p_student->p_name, p_student->sex, p_student->age);
         FreeStudentData(p_student);
     }
 
     p_student = CreateStudent("JackChen", 'M', 10, 80, 87, 90);
-    if (List_InsertDataUniquely(g_studentList, p_student) != NULL)
+    if (List_InsertDataUni(g_studentList, p_student) != NULL)
     {
         LOG_A("Succeed to insert student:'%s', sex:'%c', age:%d.\n", p_student->p_name, p_student->sex, p_student->age);
         ShowStudentList(g_studentList);
     }
 
     p_student = CreateStudent("JackChen", 'M', 10, 80, 87, 90);
-    if (List_InsertData2HeadUniquely(g_studentList, p_student) == NULL)
+    if (List_InsertData2HeadUni(g_studentList, p_student) == NULL)
     {
         LOG_A("Fail to insert student to head,'%s', sex:'%c', age:%d, perhaps already exists.\n", p_student->p_name, p_student->sex, p_student->age);
         FreeStudentData(p_student);
     }
 
     p_student = CreateStudent("JaneYang", 'F', 12, 90, 87, 90);
-    if (List_InsertData2HeadUniquely(g_studentList, p_student) != NULL)
+    if (List_InsertData2HeadUni(g_studentList, p_student) != NULL)
     {
         LOG_A("Succeed to insert student to head, '%s', sex:'%c', age:%d.\n", p_student->p_name, p_student->sex, p_student->age);
         ShowStudentList(g_studentList);
@@ -1078,16 +1088,17 @@ static int TestMatchByData()
 	CreateStudentList();
 
 	node = CreateStudentNode("Jack", 'M', 11, 98, 82, 67);
-	List_InsertNodeDescently(g_studentList, node);
+	List_InsertNodeDes(g_studentList, node);
 
 	node = CreateStudentNode("Jack", 'M', 11, 73, 67, 76);
-	List_InsertNodeDescently(g_studentList, node);
+	List_InsertNodeDes(g_studentList, node);
 	ShowStudentList(g_studentList);
 
     node = CreateStudentNode("Jack", 'M', 11, 90, 82, 98);
-    if (List_InsertNodeUniquely(g_studentList, node) == ERR_DATA_EXISTS)
+    if (List_InsertNodeUni(g_studentList, node) == ERR_DATA_EXISTS)
     {
-        LOG_A("Fail to insert node, because there is the same data in list.\n");
+        LOG_A("Fail to insert node, because there is the same data in list:\n");
+        PrintStudent((Student_t*)List_GetNodeData(g_studentList, node));
         List_DestroyNode(g_studentList, node);
     }
 

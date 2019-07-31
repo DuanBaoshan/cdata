@@ -160,7 +160,7 @@ int PriQueue_Push(Queue_t queue, void *p_data, int priority)
         return ERR_FAIL;
     }
 
-    if (List_InsertDataDescently(p_queue->list,  p_queueData) == NULL)
+    if (List_InsertDataDes(p_queue->list,  p_queueData) == NULL)
     {
         LOG_E("Fail to insert data.\n");
 
@@ -432,7 +432,7 @@ CdataBool UserPriorityLtNode(void* p_nodeData, void* p_userData)
         return CDATA_FALSE;
     }
 
-    return ((PriQueueData_t*)p_nodeData)->priority >= ((PriQueueData_t*)p_userData)->priority;
+    return ((PriQueueData_t*)p_userData)->priority <= ((PriQueueData_t*)p_nodeData)->priority;
 }
 
 static void PriQueueTraverseFn(ListTraverseNodeInfo_t* p_nodeInfo, void* p_userData, CdataBool* p_needStopTraverse)

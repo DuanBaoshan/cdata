@@ -40,8 +40,8 @@ int SGList_InsertDataAfter(List_t list,  void* p_keyword, ListNode_t newNode);
 int SGList_InsertNode(List_t list, ListNode_t node);
 int SGList_InsertNode2Head(List_t list, ListNode_t node);
 
-int SGList_InsertNodeAscently(List_t list, ListNode_t node);
-int SGList_InsertNodeDescently(List_t list, ListNode_t node);
+int SGList_InsertNodeAsc(List_t list, ListNode_t node);
+int SGList_InsertNodeDes(List_t list, ListNode_t node);
 
 int SGList_InsertNodeBefore(List_t list, ListNode_t listNode, ListNode_t newNode);
 int SGList_InsertNodeAfter(List_t list, ListNode_t listNode, ListNode_t newNode);

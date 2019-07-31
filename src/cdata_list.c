@@ -366,7 +366,7 @@ ListNode_t List_InsertData2Head(List_t list, void* p_data)
 	return node;
 }
 
-ListNode_t List_InsertDataAscently(List_t list, void* p_data)
+ListNode_t List_InsertDataAsc(List_t list, void* p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
@@ -381,7 +381,7 @@ ListNode_t List_InsertDataAscently(List_t list, void* p_data)
 		return NULL;
 	}
 
-	ret = List_InsertNodeAscently(list, node);
+	ret = List_InsertNodeAsc(list, node);
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
@@ -394,7 +394,7 @@ ListNode_t List_InsertDataAscently(List_t list, void* p_data)
 	return node;
 }
 
-ListNode_t List_InsertDataDescently(List_t list, void* p_data)
+ListNode_t List_InsertDataDes(List_t list, void* p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
@@ -409,7 +409,7 @@ ListNode_t List_InsertDataDescently(List_t list, void* p_data)
 		return NULL;
 	}
 
-	ret = List_InsertNodeDescently(list, node);
+	ret = List_InsertNodeDes(list, node);
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
@@ -422,7 +422,7 @@ ListNode_t List_InsertDataDescently(List_t list, void* p_data)
 	return node;
 }
 
-ListNode_t List_InsertDataUniquely(List_t list, void* p_data)
+ListNode_t List_InsertDataUni(List_t list, void* p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
@@ -437,7 +437,7 @@ ListNode_t List_InsertDataUniquely(List_t list, void* p_data)
 		return NULL;
 	}
 
-	ret = List_InsertNodeUniquely(list, node);
+	ret = List_InsertNodeUni(list, node);
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
@@ -450,7 +450,7 @@ ListNode_t List_InsertDataUniquely(List_t list, void* p_data)
 	return node;
 }
 
-ListNode_t List_InsertData2HeadUniquely(List_t list, void* p_data)
+ListNode_t List_InsertData2HeadUni(List_t list, void* p_data)
 {
     CHECK_PARAM(list != NULL, NULL);
     CHECK_PARAM(p_data != NULL, NULL);
@@ -465,7 +465,7 @@ ListNode_t List_InsertData2HeadUniquely(List_t list, void* p_data)
 		return NULL;
 	}
 
-	ret = List_InsertNode2HeadUniquely(list, node);
+	ret = List_InsertNode2HeadUni(list, node);
 	if (ret != ERR_OK)
 	{
 		LOG_E("Fail to insert node.\n");
@@ -1141,7 +1141,7 @@ int List_InsertNode2Head(List_t list, ListNode_t node)
 	return ret;
 }
 
-int List_InsertNodeAscently(List_t list, ListNode_t node)
+int List_InsertNodeAsc(List_t list, ListNode_t node)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 	CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
@@ -1152,11 +1152,11 @@ int List_InsertNodeAscently(List_t list, ListNode_t node)
 	List_Lock(list);
 	if (p_list->type == LIST_TYPE_DOUBLE_LINK)
 	{
-		ret = DBList_InsertNodeAscently(list, node);
+		ret = DBList_InsertNodeAsc(list, node);
 	}
 	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
-		ret = SGList_InsertNodeAscently(list, node);
+		ret = SGList_InsertNodeAsc(list, node);
 	}
 	else
 	{
@@ -1168,7 +1168,7 @@ int List_InsertNodeAscently(List_t list, ListNode_t node)
 	return ret;
 }
 
-int List_InsertNodeDescently(List_t list, ListNode_t node)
+int List_InsertNodeDes(List_t list, ListNode_t node)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 	CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
@@ -1179,11 +1179,11 @@ int List_InsertNodeDescently(List_t list, ListNode_t node)
 	List_Lock(list);
 	if (p_list->type == LIST_TYPE_DOUBLE_LINK)
 	{
-		ret = DBList_InsertNodeDescently(list, node);
+		ret = DBList_InsertNodeDes(list, node);
 	}
 	else if (p_list->type == LIST_TYPE_SINGLE_LINK)
 	{
-		ret = SGList_InsertNodeDescently(list, node);
+		ret = SGList_InsertNodeDes(list, node);
 	}
 	else
 	{
@@ -1195,7 +1195,7 @@ int List_InsertNodeDescently(List_t list, ListNode_t node)
 	return ret;
 }
 
-int List_InsertNodeUniquely(List_t list, ListNode_t node)
+int List_InsertNodeUni(List_t list, ListNode_t node)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 	CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
@@ -1223,7 +1223,7 @@ int List_InsertNodeUniquely(List_t list, ListNode_t node)
 	return ret;
 }
 
-int List_InsertNode2HeadUniquely(List_t list, ListNode_t node)
+int List_InsertNode2HeadUni(List_t list, ListNode_t node)
 {
 	CHECK_PARAM(list != NULL, ERR_BAD_PARAM);
 	CHECK_PARAM(node != NULL, ERR_BAD_PARAM);
